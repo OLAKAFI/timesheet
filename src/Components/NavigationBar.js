@@ -5,15 +5,33 @@ import { useNavigate } from "react-router-dom";
 const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
   const navigate = useNavigate();
 
+
   const handleSignOut = () => {
-    setAuthenticated(false); // Update auth state
-    navigate("/", { replace: true }); // Redirect to login/signup page
+    // Clear authentication state
+    setAuthenticated(false);
+
+  
+    // Clear session storage or local storage if used for auth
+    sessionStorage.clear();
+    localStorage.clear();
+
+  
+    // Redirect to the login/signup page and replace the current history entry
+    navigate("/", { replace: true });
+
+  
+    // Optionally clear browser history stack (disable back/forward navigation)
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = () => {
+      window.history.pushState(null, null, window.location.href);
+    };
   };
+  
 
   return (
     <Navbar bg="light" expand="lg" className="shadow-sm">
       <Container>
-        {/* Logo */}
+        {/* App name and Logo */}
         <Navbar.Brand href="/" className="fw-bold text-primary">
           <img
             src="https://via.placeholder.com/40"
@@ -21,7 +39,7 @@ const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
             className="me-2"
             style={{ borderRadius: "50%" }}
           />
-          MyApp
+          TimeSheet
         </Navbar.Brand>
 
         {/* Responsive Toggle */}
@@ -33,11 +51,8 @@ const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
             {!isAuthenticated ? (
               <>
                 <Nav.Link href="/" className="text-dark fw-semibold">
-                  SignUp/Login
+                  SignUp | Login
                 </Nav.Link>
-                {/* <Nav.Link href="/login" className="text-dark fw-semibold">
-                  Login
-                </Nav.Link> */}
                 <Nav.Link
                     onClick={handleSignOut}
                     className="text-danger fw-semibold"

@@ -24,3 +24,70 @@ body {
     text-align: left;
 }
   
+
+
+
+
+
+.calendar-container {
+  overflow-x: auto; /* Prevent horizontal overflow */
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.weekday {
+  min-width: 40px;
+  flex: 1;
+}
+
+.calendar-day {
+  min-width: 40px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+@media (max-width: 767px) {
+    .calendar-header {
+      display: none !important; /* Hide weekdays row */
+    }
+  
+    .calendar-grid {
+      grid-template-columns: repeat(3, 1fr) !important; /* Switch to 3 columns */
+      gap: 10px;
+    }
+}
+
+
+/* Adjustments for screens smaller than tablets */
+@media (max-width: 768px) {
+
+
+  .calendar-day {
+    font-size: 0.8rem;
+  }
+
+  .time-input {
+    font-size: 0.8rem; /* Scale down input size */
+  }
+}
+
+@media (max-width: 576px) {
+  .calendar-grid {
+    grid-template-columns: repeat(2, 1fr); /* Switch to 2 columns */
+    gap: 5px;
+  }
+
+  .calendar-day h6 {
+    font-size: 0.9rem;
+  }
+
+  .time-input {
+    font-size: 0.7rem; /* Further scale down input size */
+  }
+}

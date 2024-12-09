@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Button, Container, Form, Row, Col, Card } from "react-bootstrap";
-import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword} from "firebase/auth";
 import app from "../firebaseConfig"; // Firebase initialization
 import { useNavigate } from "react-router-dom";
 
@@ -17,6 +17,7 @@ const SignInSignUp = ({ setUsername }) => {
 
   const navigate = useNavigate();
 
+
   // Handle Google Sign-Up/Sign-In
   const handleGoogleSignIn = async () => {
     try {
@@ -30,6 +31,7 @@ const SignInSignUp = ({ setUsername }) => {
       console.error("Google Sign-In Error:", error.message);
     }
   };
+
 
   // Handle Form Submission
   const handleSubmit = async (e) => {
