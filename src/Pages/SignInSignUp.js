@@ -8,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+
+
 const SignInSignUp = ({ setUsername }) => {
   const [isSignUp, setIsSignUp] = useState(true);
   const [email, setEmail] = useState("");
@@ -16,6 +18,8 @@ const SignInSignUp = ({ setUsername }) => {
   const [user, setUser] = useState(null);
 
   const navigate = useNavigate();
+
+  
 
 
   // Handle Google Sign-Up/Sign-In
@@ -32,6 +36,9 @@ const SignInSignUp = ({ setUsername }) => {
     }
   };
 
+  
+
+  
 
   // Handle Form Submission
   const handleSubmit = async (e) => {

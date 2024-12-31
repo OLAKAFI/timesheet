@@ -22,7 +22,7 @@ const Form = () => {
   
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [contractHours, setContractHours] = useState();
+  const [contractHours, setContractHours] = useState(40);
   const [contractType, setContractType] = useState("");
   const [days, setDays] = useState([]);
   const [hourlyRate, setHourlyRate] = useState(11.95);

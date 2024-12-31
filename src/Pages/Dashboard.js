@@ -3,9 +3,12 @@ import { Container, Row, Col, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../style/dashboard.css"; // Custom CSS for additional styling
+import { useAuth } from "../AuthProvider";
+
 
 const Dashboard = ({ username }) => {
   const navigate = useNavigate();
+  const { user,loading } = useAuth();
 
   return (
     <Container

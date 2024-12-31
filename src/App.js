@@ -8,7 +8,23 @@ import Dashboard from "./Pages/Dashboard";
 import NavigationBar from "./Components/NavigationBar";
 import Footer from "./Components/Footer";
 
+
+import { setPersistence, browserLocalPersistence } from "firebase/auth";
+import { auth } from "../src/firebaseConfig";
+import { AuthProvider } from "./AuthProvider";
+
+
+
 function App() {
+
+  // Set auth persistence globally (run this once, e.g., in your main app file)
+  setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+      console.log("Auth persistence set to local.");
+  })
+  .catch((error) => {
+      console.error("Error setting auth persistence:", error);
+  });
   const [username, setUsername] = useState(""); // Store the username
 
   const [isAuthenticated, setAuthenticated] = useState(false); // Manage auth state
@@ -17,12 +33,14 @@ function App() {
   return (
     <Router>
       <NavigationBar isAuthenticated={isAuthenticated} setAuthenticated={setAuthenticated} />
-      <Routes>
-        <Route path="/" element={<SignInSignUp setUsername={setUsername}  />} /> 
-        <Route path="/dashboard" element={<Dashboard username={username} />} /> 
-        <Route path="/form" element={<Form />} />
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<SignInSignUp setUsername={setUsername}  />} /> 
+          <Route path="/dashboard" element={<Dashboard username={username} />} /> 
+          <Route path="/form" element={<Form />} />
 
-      </Routes>
+        </Routes>
+      </AuthProvider>
       <Footer />
     </Router>
 
