@@ -39,7 +39,7 @@ const Dashboard = ({ username }) => {
             variant="primary"
             size="lg"
             className="px-4 py-2 fw-semibold"
-            onClick={() => navigate("/form")}
+            onClick={() => navigate("/timesheet")}
           >
             Go to Timesheet
           </Button>

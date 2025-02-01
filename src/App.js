@@ -37,7 +37,7 @@ function App() {
         <Routes>
           <Route path="/" element={<SignInSignUp setUsername={setUsername}  />} /> 
           <Route path="/dashboard" element={<Dashboard username={username} />} /> 
-          <Route path="/form" element={<Form />} />
+          <Route path="/timesheet" element={<Form />} />
 
         </Routes>
       </AuthProvider>

@@ -19,6 +19,8 @@ import firestore from "../firebaseConfig";
 
 const Form = () => {
   const { user, loading } = useAuth();
+
+  const [isInitializing, setIsInitializing] = useState(true); // Tracks initialization status
   
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -39,16 +41,155 @@ const Form = () => {
 
   // persistence solution
   const [selectedMonthYear, setSelectedMonthYear] = useState("");
-  const [formState, setFormState] = useState({
-    days: Array.from({ length: 31 }, () => ({
-      timeStart: "",
-      timeEnd: "",
-      notes: "",
-    })),
-  });
 
 
   const navigate = useNavigate();
+
+
+
+  // Initilized Data Copy
+  const initializeData = async () => {
+    console.log("Initializing data for:", selectedMonth + 1, selectedYear);
+  
+    if (!user) {
+      console.warn("No authenticated user. Skipping initialization.");
+      return;
+    }
+  
+    setIsInitializing(true); // Begin initialization process
+  
+    // Attempt to load Firestore data
+    const firestoreData = await loadFromFirestore(selectedMonth, selectedYear);
+
+    if (firestoreData) {
+      console.log("Firestore data loaded successfully:", firestoreData);
+      // If Firestore data exists, update the state with the loaded data
+      setDays(firestoreData.days || []);
+      setCarryForward(firestoreData.carryForward || 0);
+    } else {
+      console.log("No Firestore data found. Generating empty days.");
+      // If no Firestore data exists, generate empty days
+      generateDays(selectedMonth, selectedYear);
+    }
+
+    setIsInitializing(false); // Mark initialization as complete
+  };
+  
+
+
+  // LoadFromFirestore logic
+  const loadFromFirestore = async (month, year) => {
+    console.log("Loading data from Firestore for:", month + 1, year);
+  
+    if (!user) {
+      console.warn("No authenticated user. Cannot load data.");
+      return null;
+    }
+  
+    const key = `user-data-${year}-${month + 1}`;
+    const userDocRef = doc(db, "userInputs", user.uid);
+  
+    try {
+      const userDoc = await getDoc(userDocRef);
+  
+      if (userDoc.exists()) {
+        const savedData = userDoc.data()[key];
+        if (savedData) {
+          console.log("Firestore data found:", savedData);
+          // setDays(savedData.days || []);
+          // setCarryForward(savedData.carryForward || 0);
+          return savedData; // Data successfully loaded
+        }
+      }
+    } catch (error) {
+      console.error("Error loading data from Firestore:", error);
+    }
+  
+    console.warn("No data found in Firestore for this month/year.");
+    return null; // Data not found
+  };
+
+
+  // generate days with empty inputs to display when no data is saved /can be loaded from firestore
+  const generateDays = (month, year) => {
+    // if (days.length > 0) return; // Prevent overwriting existing data
+    // Calculate the number of days in the current month
+    const numDays = new Date(year, month + 1, 0).getDate();
+  
+    // Get the last day of the previous month
+    const previousMonthLastDate = new Date(year, month, 0);
+    const previousMonthLastDay = previousMonthLastDate.getDay();
+  
+    // Determine the starting weekday for the new month
+    // The next day after the previous month's last day
+    const startingDayIndex = (previousMonthLastDay + 1) % 7;
+  
+    // Generate the days for the current month
+    const newDays = Array.from({ length: numDays }, (_, index) => {
+      const weekdayIndex = (startingDayIndex + index) % 7; // Calculate weekday index
+      const dayName = daysOfWeek[weekdayIndex];
+  
+      return {
+        day: index + 1,
+        weekday: dayName, // Get the name of the weekday
+        timeStart: "",
+        timeEnd: "",
+        timeDifference: "",
+      };
+    });
+  
+    setDays(newDays); // Update the days state
+    console.log("Generated days for the calendar:", newDays);
+  };
+
+  // Handle Month and YearChange
+  const handleMonthYearChange = (month, year) => {
+    setSelectedMonth(month);
+    setSelectedYear(year);
+    // Load Firestore data for the new selection
+    // loadFromFirestore(month, year);
+    // initializeData(); // Reinitialize data for the new month/year
+  };
+
+  
+  // save to firebase
+  const saveToFirestore = async () => {
+    if (!user || isInitializing) {
+      console.warn("No authenticated user. Cannot save data.");
+      return;
+    }
+  
+    const key = `user-data-${selectedYear}-${selectedMonth + 1}`;
+    const userDocRef = doc(db, "userInputs", user.uid);
+    const updatedData = {
+      [key]: { days, carryForward },
+    };
+  
+    try {
+      await setDoc(userDocRef, updatedData, { merge: true });
+      console.log("Data successfully updated in Firestore:", updatedData);
+    } catch (error) {
+      console.error("Error saving data to Firestore:", error);
+    }
+  };
+
+  // Initialize data when user or month/year changes
+  useEffect(() => {
+    if (user) {
+      initializeData();
+    }
+  }, [user, selectedMonth, selectedYear]);
+
+
+  // In your Form component
+  useEffect(() => {
+    if (!user) {
+      navigate("/");
+      return;
+    }
+    initializeData();
+  }, [user, selectedMonth, selectedYear]);
+
 
 
   // Load carry forward data from local storage for the current month
@@ -95,6 +236,12 @@ const Form = () => {
     // Update annual and monthly pay based on new contractHours
     const updatedAnnualPay = (updatedAnnualExpectedHours * hourlyRate).toFixed(2);
     setAnnualPay(updatedAnnualPay);
+
+
+    
+    // // Save updates to Firestore using debounce
+    debouncedSaveToFirestore();
+
   
     const updatedMonthlyPay = (updatedAnnualPay / 12).toFixed(2);
     setMonthlyPay(updatedMonthlyPay);
@@ -117,65 +264,19 @@ const Form = () => {
 
 
   
-
-  // save to firebase
-  const saveToFirestore = async () => {
-      if (!user) {
-          console.warn("No authenticated user. Cannot save data.");
-          return;
-      }
-
-      const key = `user-data-${selectedYear}-${selectedMonth + 1}`;
-      const userDocRef = doc(db, "userInputs", user.uid);
-      const newData = {
-          [key]: { days, carryForward },
-      };
-
-      try {
-          await setDoc(userDocRef, newData, { merge: true });
-          console.log("Data successfully saved to Firestore:", newData);
-      } catch (error) {
-          console.error("Error saving data to Firestore:", error);
-      }
-  };
-  
-
-
-  // Firestore Load Logic
-  const loadFromFirestore = async (month,year) => {
-    if (!user) return;
-  
-    const key = `user-data-${year}-${month + 1}`;
-    const userDocRef = doc(db, "userInputs", user.uid);
-  
-    try {
-      const userDoc = await getDoc(userDocRef);
-      if (userDoc.exists()) {
-        const savedData = userDoc.data()[key];
-        if (savedData) {
-          // Load data into state if found
-          setDays(savedData.days || []);
-          setCarryForward(savedData.carryForward || 0);
-        } else {
-          // Generate empty days if no data is found
-          generateEmptyDays(selectedMonth, selectedYear)
-        }
-      } else {
-        // Generate empty days if user document doesn't exist
-        generateEmptyDays(selectedMonth, selectedYear)
-      }
-    } catch (error) {
-      console.error("Error loading data from Firestore:", error);
+  // When month or year changes, fetch data from Firestore
+  useEffect(() => {
+    if (user) {
+        loadFromFirestore(selectedMonth, selectedYear);
     }
-  };
+  }, [user, selectedMonth, selectedYear]);
+
   
-
-
-
+  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        loadFromFirestore();
+        loadFromFirestore(); // Pass selectedMonth and selectedYear
       } else {
         navigate("/");
       }
@@ -183,8 +284,6 @@ const Form = () => {
   
     return () => unsubscribe(); // Cleanup listener on unmount
   }, [navigate]);
-  
-
 
 
   // Handle logout
@@ -202,53 +301,46 @@ const Form = () => {
     }
   };
   
-  
-  
 
-  // Modified generateDays to avoid overwriting state unnecessarily
-  const generateDays = (month, year) => {
-    if (days.length > 0) return; // Prevent overwriting existing data
-    const numDays = new Date(year, month + 1, 0).getDate();
-    const newDays = Array.from({ length: numDays }, (_, index) => ({
-      day: index + 1,
-      timeStart: "",
-      timeEnd: "",
-      timeDifference: "",
-    }));
-    setDays(newDays);
-  };
 
-  // generate days with empty inputs to display when no data is saved /can be loaded from firestore
+  // generate empty days
   const generateEmptyDays = (month, year) => {
-    // Assuming you want to generate an empty form for the whole month
-    const numberOfDays = new Date(year, month, 0).getDate(); // Get number of days in the selected month
-    const emptyDays = Array.from({ length: numberOfDays }, (_, index) => ({
-      timeStart: "",
-      timeEnd: "",
-      day: index + 1,
-    }));
+    if (days.length === 0) return; // Prevent overwriting existing data
+    // Calculate the number of days in the current month
+    const numDays = new Date(year, month + 1, 0).getDate();
   
-    // Update the state with empty form data
-    setDays(emptyDays);
-    setCarryForward(0);  // Reset carry forward if needed
-  };
-
-  // When month or year changes, fetch data from Firestore
-  useEffect(() => {
-    if (user) {
-      loadFromFirestore(selectedMonth, selectedYear);
+    // Get the last day of the previous month
+    const previousMonthLastDate = new Date(year, month, 0);
+    const previousMonthLastDay = previousMonthLastDate.getDay();
+  
+    // Determine the starting weekday for the new month
+    // If the previous month's last day is a workday (Mon-Fri), continue from there
+    let startingDayIndex = (previousMonthLastDay + 1) % 7; // Next day after previous month's last day
+    while (startingDayIndex === 0 || startingDayIndex === 6) {
+      // Skip weekends (Sunday=0, Saturday=6)
+      startingDayIndex = (startingDayIndex + 1) % 7;
     }
-  }, [user, selectedMonth, selectedYear]);
-
-
-  // Prevent overwriting when switching between months/years
-  const handleMonthYearChange = (month, year) => {
-    setSelectedMonth(month);
-    setSelectedYear(year);
-    // Load Firestore data for the new selection
-    loadFromFirestore(month, year);
-  };
   
+    // Generate the days for the current month
+    const emptyDays = Array.from({ length: numDays }, (_, index) => {
+      const weekdayIndex = (startingDayIndex + index) % 7; // Calculate weekday index
+      const dayName = daysOfWeek[weekdayIndex];
+  
+      return {
+        day: index + 1,
+        weekday: dayName, // Get the name of the weekday
+        timeStart: "",
+        timeEnd: "",
+        timeDifference: "",
+      };
+    });
+  
+    setDays(emptyDays); // Update the days state
+    setCarryForward(0); // Reset carry forward
+    console.log("Generated emptydays for the calendar:", emptyDays);
+  };
+
+    
 
   const calculateTotalWorkingDays = (month, year) => {
     const numDays = new Date(year, month + 1, 0).getDate();
@@ -310,7 +402,7 @@ const Form = () => {
     setDays(updatedDays);
 
     // Update carry-forward and save to Firestore
-    const overtimeOrTimeOwed = totalHours - expectedHours + carryForward;
+    const overtimeOrTimeOwed = totalHours - expectedHours;
     setCarryForward(overtimeOrTimeOwed);
 
     debouncedSaveToFirestore();
@@ -327,15 +419,9 @@ const Form = () => {
     .filter((day) => day.timeDifference)
     .reduce((acc, day) => acc + parseFloat(day.timeDifference), 0);
 
-
-  useEffect(() => {
-    if (user && days.length === 0) {
-      // Only load data if user is authenticated and no data is currently loaded
-      loadFromFirestore();
-    }
-  }, [user, selectedMonth, selectedYear, days]);
-
-  const netTimeOwedOrOvertime = Math.abs(totalHours - expectedHours + previousCarryForward);
+  
+  
+  const netTimeOwedOrOvertime = totalHours - expectedHours;
   
 
   useEffect(() => {
@@ -343,7 +429,7 @@ const Form = () => {
   }, [netTimeOwedOrOvertime]);
 
   useEffect(() => {
-    const overtimeOrTimeOwed = totalHours - expectedHours + carryForward;
+    const overtimeOrTimeOwed = totalHours - expectedHours;
     setCarryForward(overtimeOrTimeOwed);
     // saveToLocalStorage();
     saveToFirestore();
@@ -353,7 +439,7 @@ const Form = () => {
   // NEW
   // Calculate and update the carry-forward (time owed or overtime) when the hours are updated
   useEffect(() => {
-    const netTimeOwedOrOvertime = Math.abs(totalHours - expectedHours + previousCarryForward);
+    const netTimeOwedOrOvertime = totalHours - expectedHours;
     setCarryForward(netTimeOwedOrOvertime);  // Update carry-forward state
     saveCarryForward(netTimeOwedOrOvertime);  // Save to localStorage for persistence
   }, [totalHours, expectedHours, previousCarryForward]);
@@ -414,12 +500,10 @@ const Form = () => {
   console.log(`Gross Pay: $${grossPay}`);
 
 
-  
-
   return (
     <div className="bg-primary min-vh-100 d-flex justify-content-center align-items-center py-5">
       <Container className="bg-light p-4 rounded shadow-lg my-5">
-        <h2 className="text-center mb-4">Calendar Time Difference Calculator</h2>
+        <h2 className="text-center mb-4">WORK SHIFT ORGANIZER</h2>
         
         {/* Input Form Section */}
         {/* Contract Details Inputs */}
@@ -499,11 +583,8 @@ const Form = () => {
 
 
 
-        {/* Responsive Calendar Grid */}
-
-
-        <div className="calendar-container my-5">
-          {/* Weekday Header */}
+        {/* COPY RESPONSIVE GRID */}
+        {/* Weekday Header */}
           <div
             className="calendar-header d-grid"
             style={{
@@ -521,7 +602,6 @@ const Form = () => {
                   fontSize: "0.9rem",
                   wordWrap: "break-word",
                   minWidth: "40px",
-                  gap:'20px'
                 }}
               >
                 {day}
@@ -538,6 +618,21 @@ const Form = () => {
               gap: "10px",
             }}
           >
+            {/* Empty placeholders for days before the first day of the month */}
+            {days.length > 0 &&
+              Array.from({ length: daysOfWeek.indexOf(days[0]?.weekday) }).map((_, idx) => (
+                <div
+                  key={`empty-${idx}`}
+                  className="calendar-day p-2"
+                  style={{
+                    minWidth: "40px",
+                    height: "50px",
+                    backgroundColor: "transparent",
+                  }}
+                />
+              ))}
+
+            {/* Render Days */}
             {days.map((day, index) => {
               const isComplete = day.timeStart && day.timeEnd;
               return (
@@ -583,10 +678,6 @@ const Form = () => {
               );
             })}
           </div>
-        </div>
-
-
-
 
 
 
@@ -667,12 +758,12 @@ const Form = () => {
               }`}
             >
               <Card.Body>
-                <Card.Title>{previousCarryForward.toFixed(2)> 0 > 0 ? "Previous Month Overtime" : "Previous Month Time Owed"}</Card.Title>
-                <Card.Text>{previousCarryForward.toFixed(2)} hrs</Card.Text>
+                <Card.Title>{previousCarryForward.toFixed(2) > 0 ? "Previous Month Overtime" : "Previous Month Time Owed"}</Card.Title>
+                <Card.Text>{Math.abs(previousCarryForward).toFixed(2)} hrs</Card.Text>
               </Card.Body>
             </Card>
           </Col>
-          <Col>
+          {/* <Col>
             <Card 
               className={`text-center shadow ${
                 netTimeOwedOrOvertime.toFixed(2)> 0 ? "bg-success text-white" : "bg-danger text-white"
@@ -683,13 +774,13 @@ const Form = () => {
                 <Card.Text>{netTimeOwedOrOvertime.toFixed(2)} hrs</Card.Text>
               </Card.Body>
             </Card>
-          </Col>
+          </Col> */}
         </Row>
 
         <Row className="mt-4">
           <Col>
             <Card 
-              className='text-center shadow'
+              className='text-center  border border-success border-2 shadow'
             >
               <Card.Body>
                 <Card.Title>Monthly Gross Pay</Card.Title>
@@ -700,16 +791,12 @@ const Form = () => {
 
 
         </Row>
-        <Row>
+        <Row className="text-center mt-5">  
           <Col>
-            <button onClick={handleSignOut}>Sign Out</button>
+            <button className=" btn  btn-lg border border-dark border-3" onClick={handleSignOut}>Sign Out</button>
           </Col>
         </Row>
 
-
-
-
-        
       </Container>
     </div>
   );
