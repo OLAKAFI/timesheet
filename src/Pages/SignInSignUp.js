@@ -118,8 +118,9 @@ const SignInSignUp = ({ setUsername }) => {
                   : "Don't have an account? "}
                 <span
                   onClick={() => setIsSignUp(!isSignUp)}
-                  className="text-primary cursor-pointer"
-                  style={{ cursor: "pointer" }}
+                  className="cursor-pointer"
+                  style={{color:'#4D0FD8', cursor: "pointer" }}
+                  
                 >
                   {isSignUp ? "Sign In" : "Sign Up"}
                 </span>

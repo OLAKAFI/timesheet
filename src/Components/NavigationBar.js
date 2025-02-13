@@ -66,7 +66,8 @@ const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
             ) : (
               <Nav.Link
                 onClick={handleSignOut}
-                className="text-danger fw-semibold"
+                className="fw-semibold"
+                style={{ color: "#A50B5E" }}
               >
                 SignOut
               </Nav.Link>
