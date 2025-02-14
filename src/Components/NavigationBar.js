@@ -1,6 +1,7 @@
 import React from "react";
 import { Navbar, Nav, Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import tlogo from '../TIMESHEET.png'
 
 const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
   const navigate = useNavigate();
@@ -33,13 +34,15 @@ const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
       <Container>
         {/* App name and Logo */}
         <Navbar.Brand href="/" className="fw-bold text-primary">
-          <img
-            src="https://via.placeholder.com/40"
-            alt="Logo"
-            className="me-2"
-            style={{ borderRadius: "50%" }}
-          />
-          TimeSheet
+          <div className="h-100">
+            <img
+              src={tlogo}
+              alt="Logo"
+              className="me-2 img-fluid" 
+              // style={{ borderRadius: "50%" }}
+            />
+          </div>
+          
         </Navbar.Brand>
 
         {/* Responsive Toggle */}
@@ -63,7 +66,8 @@ const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
             ) : (
               <Nav.Link
                 onClick={handleSignOut}
-                className="text-danger fw-semibold"
+                className="fw-semibold"
+                style={{ color: "#A50B5E" }}
               >
                 SignOut
               </Nav.Link>

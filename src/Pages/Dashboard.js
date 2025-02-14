@@ -19,13 +19,13 @@ const Dashboard = ({ username }) => {
         
         {/* Welcome Message */}
         <Col xs={12} className="text-center mb-4">
-          <h1 className="display-4 text-primary fw-bold">
+          <h1 className="display-4 fw-bold" style={{color:'#4D0FD8'}}>
             Welcome
           </h1>
-          <h1 className="display-4 text-primary fw-bold">
-            {username || "Guest"}!
+          <h1 className="display-4  fw-bold" style={{color:'#4D0FD8'}}>
+            {username || "Guest"}
           </h1>
-          <p className="fs-5 mt-3 text-muted">
+          <p className="fs-5 mt-3 text-dark">
             We're thrilled to have you here. This platform is designed to help
             you track your working hours, calculate overtime, and manage your
             time effectively. Achieve productivity and maintain a balanced
@@ -34,14 +34,27 @@ const Dashboard = ({ username }) => {
         </Col>
 
         {/* Navigation Button */}
-        <Col xs={12} className="text-center">
+        <Col xs={12} className="text-center my-3">
           <Button
-            variant="primary"
+            
             size="lg"
             className="px-4 py-2 fw-semibold"
-            onClick={() => navigate("/form")}
+            style={{backgroundColor:'#4D0FD8'}}
+            onClick={() => navigate("/timesheet")}
           >
             Go to Timesheet
+          </Button>
+        </Col>
+
+        <Col xs={12} className="text-center">
+          <Button
+            
+            size="lg"
+            style={{backgroundColor:'#4D0FD8'}}
+            className="px-4 py-2 fw-semibold mb-3"
+            onClick={() => navigate("/rota")}
+          >
+            Create Your Rota
           </Button>
         </Col>
       </Row>

@@ -12,6 +12,8 @@ import Footer from "./Components/Footer";
 import { setPersistence, browserLocalPersistence } from "firebase/auth";
 import { auth } from "../src/firebaseConfig";
 import { AuthProvider } from "./AuthProvider";
+import Rota from "./Pages/StaffSchedule";
+import StaffSchedule from "./Pages/StaffSchedule";
 
 
 
@@ -37,7 +39,8 @@ function App() {
         <Routes>
           <Route path="/" element={<SignInSignUp setUsername={setUsername}  />} /> 
           <Route path="/dashboard" element={<Dashboard username={username} />} /> 
-          <Route path="/form" element={<Form />} />
+          <Route path="/timesheet" element={<Form />} />
+          <Route path="/rota" element={<StaffSchedule/>} />
 
         </Routes>
       </AuthProvider>

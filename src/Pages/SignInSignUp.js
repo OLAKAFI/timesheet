@@ -5,6 +5,8 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPas
 import app from "../firebaseConfig"; // Firebase initialization
 import { useNavigate } from "react-router-dom";
 
+
+
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
@@ -30,34 +32,30 @@ const SignInSignUp = ({ setUsername }) => {
       setUser(user);
       setUsername(user.displayName); // Use Google account's display name
       console.log("Google Sign-In Success:", user);
+      // Step 1: Load data from Firestore
       navigate("/dashboard");
     } catch (error) {
       console.error("Google Sign-In Error:", error.message);
     }
   };
 
-  
 
-  
-
-  // Handle Form Submission
-  const handleSubmit = async (e) => {
+  // Handle Form Submission with handleEmailPasswordAuth
+  const handleEmailPasswordAuth = async (e) => {
     e.preventDefault();
     try {
-      if (isSignUp) {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        setUser(userCredential.user);
-        setUsername(username);
-        console.log("User Created:", userCredential.user);
-      } else {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        setUser(userCredential.user);
-        console.log("User Signed In:", userCredential.user);
+      const userCredential = isSignUp 
+        ? await createUserWithEmailAndPassword(auth, email, password)
+        : await signInWithEmailAndPassword(auth, email, password);
+      
+        const user = userCredential.user;
+        setUsername(isSignUp ? username : user.email); // For sign-up, use input username
+        console.log("Authentication Success:", user);
+        navigate("/dashboard", { state: { user: { email: user.email, displayName: user.displayName, uid: user.uid } } });
+      } catch (error) {
+        console.error("Email/Password Auth Error:", error.message);
+        alert(error.message);
       }
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Authentication Error:", error.message);
-    }
   };
 
   return (
@@ -66,7 +64,7 @@ const SignInSignUp = ({ setUsername }) => {
         <Col md={6} lg={4} className="mx-auto">
           <Card className="p-4 shadow-sm border-0 rounded">
             <h2 className="text-center mb-4">{isSignUp ? "Sign Up" : "Sign In"}</h2>
-            <Form onSubmit={handleSubmit}>
+            <Form onSubmit={handleEmailPasswordAuth}>
               {isSignUp && (
                 <Form.Group controlId="formUsername" className="mb-3">
                   <Form.Label>Username</Form.Label>
@@ -120,8 +118,9 @@ const SignInSignUp = ({ setUsername }) => {
                   : "Don't have an account? "}
                 <span
                   onClick={() => setIsSignUp(!isSignUp)}
-                  className="text-primary cursor-pointer"
-                  style={{ cursor: "pointer" }}
+                  className="cursor-pointer"
+                  style={{color:'#4D0FD8', cursor: "pointer" }}
+                  
                 >
                   {isSignUp ? "Sign In" : "Sign Up"}
                 </span>
