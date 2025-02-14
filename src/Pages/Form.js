@@ -501,9 +501,9 @@ const Form = () => {
 
 
   return (
-    <div className="bg-primary min-vh-100 d-flex justify-content-center align-items-center py-5">
+    <div className=" min-vh-100 d-flex justify-content-center align-items-center py-5" style={{backgroundColor:'#9866C7'}}>
       <Container className="bg-light p-4 rounded shadow-lg my-5">
-        <h2 className="text-center mb-4">WORK SHIFT ORGANIZER</h2>
+        <h2 className="display-5 fw-bold text-center my-5" style={{color:'#592693'}}>WORK SHIFT ORGANIZER</h2>
         
         {/* Input Form Section */}
         {/* Contract Details Inputs */}
@@ -793,7 +793,7 @@ const Form = () => {
         </Row>
         <Row className="text-center mt-5">  
           <Col>
-            <button className=" btn  btn-lg border border-dark border-3" onClick={handleSignOut}>Sign Out</button>
+            <button className=" btn  btn-lg text-white" style={{ backgroundColor: "#A50B5E" }} onClick={handleSignOut}>Sign Out</button>
           </Col>
         </Row>
 
