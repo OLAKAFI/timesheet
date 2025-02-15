@@ -25,19 +25,19 @@ const SignInSignUp = ({ setUsername }) => {
 
 
   // Handle Google Sign-Up/Sign-In
-  const handleGoogleSignIn = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      setUser(user);
-      setUsername(user.displayName); // Use Google account's display name
-      console.log("Google Sign-In Success:", user);
-      // Step 1: Load data from Firestore
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Google Sign-In Error:", error.message);
-    }
-  };
+  // const handleGoogleSignIn = async () => {
+  //   try {
+  //     const result = await signInWithPopup(auth, provider);
+  //     const user = result.user;
+  //     setUser(user);
+  //     setUsername(user.displayName); // Use Google account's display name
+  //     console.log("Google Sign-In Success:", user);
+  //     // Step 1: Load data from Firestore
+  //     navigate("/dashboard");
+  //   } catch (error) {
+  //     console.error("Google Sign-In Error:", error.message);
+  //   }
+  // };
 
 
   // Handle Form Submission with handleEmailPasswordAuth
@@ -101,7 +101,7 @@ const SignInSignUp = ({ setUsername }) => {
                 {isSignUp ? "Sign Up" : "Sign In"}
               </Button>
             </Form>
-            <div className="text-center mb-3">
+            {/* <div className="text-center mb-3">
               <Button
                 variant="outline-secondary"
                 className="d-flex align-items-center justify-content-center w-100"
@@ -110,7 +110,7 @@ const SignInSignUp = ({ setUsername }) => {
                 <FcGoogle className="me-2" />
                 {isSignUp ? "Sign Up with Google" : "Sign In with Google"}
               </Button>
-            </div>
+            </div> */}
             <div className="text-center">
               <p className="mb-0">
                 {isSignUp
