@@ -654,11 +654,13 @@ const Form = () => {
                     {day.day}
                   </h6>
                   <BootstrapForm.Control
-                    type="time"
+                    type="text"
+                    placeholder="HH:MM"
                     inputMode="numeric" // Forces iOS to show number keyboard
-                    value={day.timeStart || ' '}
+                    pattern="[0-9]{2}:[0-9]{2}" // Optional: Enforce HH:MM format
+                    value={day.timeStart}
                     onChange={(e) => handleInputChange(index, "timeStart", e.target.value)}
-                    onDoubleClick={() => handleInputChange(index, "timeStart", "")} // Clear on double-click
+                    // onDoubleClick={() => handleInputChange(index, "timeStart", "")} // Clear on double-click
                     className="mb-2 time-input"
                   />
                   <BootstrapForm.Control
