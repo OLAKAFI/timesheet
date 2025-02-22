@@ -657,12 +657,14 @@ const Form = () => {
                     type="time"
                     value={day.timeStart}
                     onChange={(e) => handleInputChange(index, "timeStart", e.target.value)}
+                    onDoubleClick={() => handleInputChange("")} // Double-tap to clear
                     className="mb-2 time-input"
                   />
                   <BootstrapForm.Control
                     type="time"
                     value={day.timeEnd}
                     onChange={(e) => handleInputChange(index, "timeEnd", e.target.value)}
+                    onDoubleClick={() => handleInputChange("")} // Double-tap to clear
                     className="mb-2 time-input"
                   />
                   <p
