@@ -655,6 +655,7 @@ const Form = () => {
                   </h6>
                   <BootstrapForm.Control
                     type="time"
+                    inputMode="numeric" // Forces iOS to show number keyboard
                     value={day.timeStart || ' '}
                     onChange={(e) => handleInputChange(index, "timeStart", e.target.value)}
                     onDoubleClick={() => handleInputChange(index, "timeStart", "")} // Clear on double-click
@@ -662,6 +663,7 @@ const Form = () => {
                   />
                   <BootstrapForm.Control
                     type="time"
+                    inputMode="numeric" // Forces iOS to show number keyboard
                     value={day.timeEnd || ' '}
                     onChange={(e) => handleInputChange(index, "timeEnd", e.target.value)}
                     onDoubleClick={() => handleInputChange(index, "timeEnd", "")} // Clear on double-click
