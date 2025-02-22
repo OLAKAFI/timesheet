@@ -673,17 +673,18 @@ const Form = () => {
                     placeholder="HH:MM"
                     maxLength="5" // Restrict input to 4 digits
                     inputMode="numeric" // Forces iOS to show number keyboard
-                    // pattern="[0-9]{2}:[0-9]{2}" // Optional: Enforce HH:MM format
-                    value={day.timeStart || " "}
+                    value={day.timeStart}
                     onChange={(e) => formatTimeInput(e.target.value, index, "timeStart")}
-                    // onDoubleClick={() => handleInputChange(index, "timeStart", "")} // Clear on double-click
+                    onDoubleClick={() => handleInputChange(index, "timeStart", "")} // Clear on double-click
                     className="mb-2 time-input"
                   />
                   <BootstrapForm.Control
-                    type="time"
+                    type="text"
+                    placeholder="HH:MM"
+                    maxLength="5" // Restrict input to 5 digits
                     inputMode="numeric" // Forces iOS to show number keyboard
-                    value={day.timeEnd || ' '}
-                    onChange={(e) => handleInputChange(index, "timeEnd", e.target.value)}
+                    value={day.timeEnd}
+                    onChange={(e) => formatTimeInput(e.target.value, index, "timeEnd")}
                     onDoubleClick={() => handleInputChange(index, "timeEnd", "")} // Clear on double-click
                     className="mb-2 time-input"
                   />
