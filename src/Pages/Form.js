@@ -671,7 +671,7 @@ const Form = () => {
                   <BootstrapForm.Control
                     type="text"
                     placeholder="HH:MM"
-                    maxLength="4" // Restrict input to 4 digits
+                    maxLength="5" // Restrict input to 4 digits
                     inputMode="numeric" // Forces iOS to show number keyboard
                     // pattern="[0-9]{2}:[0-9]{2}" // Optional: Enforce HH:MM format
                     value={day.timeStart || " "}
