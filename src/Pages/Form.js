@@ -500,6 +500,21 @@ const Form = () => {
 
   console.log(`Gross Pay: $${grossPay}`);
 
+  // Format time input
+  const formatTimeInput = (value, index, field) => {
+    // Remove non-numeric characters
+    let cleanValue = value.replace(/\D/g, "");
+  
+    if (cleanValue.length > 4) return; // Prevent extra input
+  
+    // Auto-insert colon after 2nd digit (HH:MM format)
+    if (cleanValue.length >= 3) {
+      cleanValue = `${cleanValue.slice(0, 2)}:${cleanValue.slice(2)}`;
+    }
+  
+    handleInputChange(index, field, cleanValue);
+  };
+
 
   return (
     <div className=" min-vh-100 d-flex justify-content-center align-items-center py-5" style={{backgroundColor:'#9866C7'}}>
@@ -656,10 +671,11 @@ const Form = () => {
                   <BootstrapForm.Control
                     type="text"
                     placeholder="HH:MM"
+                    maxLength="4" // Restrict input to 4 digits
                     inputMode="numeric" // Forces iOS to show number keyboard
-                    pattern="[0-9]{2}:[0-9]{2}" // Optional: Enforce HH:MM format
-                    value={day.timeStart}
-                    onChange={(e) => handleInputChange(index, "timeStart", e.target.value)}
+                    // pattern="[0-9]{2}:[0-9]{2}" // Optional: Enforce HH:MM format
+                    value={day.timeStart || " "}
+                    onChange={(e) => formatTimeInput(e.target.value, index, "timeStart")}
                     // onDoubleClick={() => handleInputChange(index, "timeStart", "")} // Clear on double-click
                     className="mb-2 time-input"
                   />
