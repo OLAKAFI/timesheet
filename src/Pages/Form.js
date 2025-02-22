@@ -655,16 +655,16 @@ const Form = () => {
                   </h6>
                   <BootstrapForm.Control
                     type="time"
-                    value={day.timeStart}
+                    value={day.timeStart || ' '}
                     onChange={(e) => handleInputChange(index, "timeStart", e.target.value)}
-                    onDoubleClick={() => handleInputChange(null)} // Double-tap to clear
+                    onDoubleClick={() => handleInputChange('')} // Double-tap to clear
                     className="mb-2 time-input"
                   />
                   <BootstrapForm.Control
                     type="time"
-                    value={day.timeEnd}
+                    value={day.timeEnd || ' '}
                     onChange={(e) => handleInputChange(index, "timeEnd", e.target.value)}
-                    onDoubleClick={() => handleInputChange(null)} // Double-tap to clear
+                    onDoubleClick={() => handleInputChange('')} // Double-tap to clear
                     className="mb-2 time-input"
                   />
                   <p
