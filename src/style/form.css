@@ -52,6 +52,14 @@ body {
 }
 
 
+
+/* Hide clock icon in Chrome, Edge, Safari */
+input[type="time"]::-webkit-calendar-picker-indicator {
+  display: none !important;
+  -webkit-appearance: none;
+}
+
+
 @media (max-width: 767px) {
     .calendar-header {
       display: none !important; /* Hide weekdays row */
@@ -91,3 +99,5 @@ body {
     font-size: 0.7rem; /* Further scale down input size */
   }
 }
+
+
