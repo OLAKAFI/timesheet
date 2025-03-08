@@ -17,7 +17,7 @@ const Footer = () => {
                 alt="Logo"
                 style={{ borderRadius: "50%" }}
               /> */}
-              <p className="mt-2 fw-bold text-primary">TimeSheet</p>
+              <p className="mt-2 fw-bold" style={{ color: "#592693" }}>TimeSheet</p>
             </div>
           </Col>
 

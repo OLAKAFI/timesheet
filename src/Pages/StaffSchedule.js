@@ -54,7 +54,7 @@ const getWeekdaysInMonth = (year, month) => {
 };
 
 const StaffSchedule = () => {
-  const [staffList, setStaffList] = useState([{ name: "", hours: 0, totalWeekHours: 0 }]);
+  const [staffList, setStaffList] = useState([{ name: "", hours: 0, totalWeekHours: 0 , avoidWeekends: false, allowNightShifts: false}]);
   const [shifts, setShifts] = useState({});
   const [unassignedShifts, setUnassignedShifts] = useState({});
 
@@ -133,6 +133,9 @@ const StaffSchedule = () => {
       totalHours[staff.name] = 0;
     });
   
+
+    
+
     // Process days in order to enable consecutive assignments
     daysOrder.forEach(day => {
       // Get previous day in sequence
@@ -170,9 +173,18 @@ const StaffSchedule = () => {
           
           const currentHours = totalHours[staff.name] || 0;
           const maxHours = staff.hours + 8;
+
+
           
           // Check hour capacity
+          // if (currentHours + shiftHours >= staff.hours) continue;
           if (currentHours + shiftHours > maxHours) continue;
+          
+          // Prefrences check
+          if (shiftType === "night" && !staff.allowNightShifts) continue; // Assign night shift only if allowed
+          if (["SATURDAY", "SUNDAY"].includes(day) && staff.avoidWeekends) continue; // Skip weekends if avoided
+
+          
   
           // Check shift type transitions
           if (staff.lastShiftType && staff.lastShiftType !== shiftType) {
@@ -189,6 +201,8 @@ const StaffSchedule = () => {
             const currentIndex = daysOrder.indexOf(day);
             if (currentIndex - lastIndex > 1) continue;
           }
+
+  
   
           // Assign the shift
           staff.assignedDays.add(day);
@@ -211,6 +225,8 @@ const StaffSchedule = () => {
     setStaffList(staffData.map(staff => ({
       name: staff.name,
       hours: staff.hours,
+      avoidWeekends: staff.avoidWeekends,
+      allowNightShifts: staff.allowNightShifts,
       totalWeekHours: totalHours[staff.name] || 0
     })));
     
@@ -227,120 +243,169 @@ const StaffSchedule = () => {
 
   // MAIN CONTENT
   return (
-    <Container className="mt-5 mb-5">
-      <h2 className="display-5 fw-bold text-center my-4" style={{color:'#592693'}}>STAFF DETAILS</h2>
-      <div className="d-flex justify-content-between my-3 me-2">
-        {/* Dropdown for selecting the month, which triggers recalculations of monthly hours. */}
-        <Form.Select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="">
-          {moment.months().map((month, index) => (
-            <option key={index} value={String(index + 1).padStart(2, "0")}> {month} </option>
-          ))}
-        </Form.Select>
-        {/* Dropdown for selecting the year, which also updates the total monthly hours dynamically. */}
-        <Form.Select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="">
-          {[...Array(5)].map((_, i) => {
-            const year = moment().year() - 2 + i;
-            return <option key={year} value={year}>{year}</option>;
-          })}
-        </Form.Select>
-      </div>
-
-      {/* Input for the staff details, name and contract hours */}
-      <div className="my-5">
-        {staffList.map((staff, index) => (
-          <div key={index} className="d-flex align-items-center mb-2">
-            <Form.Control
-              type="text"
-              placeholder="Staff Name"
-              value={staff.name}
-              onChange={(e) => handleChange(index, "name", e.target.value)}
-              className="me-2"
-            />
-            <Form.Control
-              type="number"
-              placeholder="Contracted Hours"
-              value={staff.hours}
-              onChange={(e) => handleChange(index, "hours", parseFloat(e.target.value))}
-              className="me-2"
-            />
-            <Button style={{ backgroundColor: "#A50B5E" }} onClick={() => removeRow(index)}>
-              <BsTrash />
-            </Button>
-          </div>
+    <Container className="mt-4 mb-5 px-3 px-md-5">
+    <h2 className="text-center display-5 fw-bold my-4" style={{ color: "#592693" }}>
+      STAFF DETAILS
+    </h2>
+    
+    {/* Dropdowns for month & year selection */}
+    <div className="d-flex flex-wrap gap-2 justify-content-center">
+      <Form.Select
+        value={selectedMonth}
+        onChange={(e) => setSelectedMonth(e.target.value)}
+        className="w-auto"
+      >
+        {moment.months().map((month, index) => (
+          <option key={index} value={String(index + 1).padStart(2, "0")}>
+            {month}
+          </option>
         ))}
-        <Button className='mt-3' style={{backgroundColor:'#4D0FD8'}} onClick={addRow}>
+      </Form.Select>
+      <Form.Select
+        value={selectedYear}
+        onChange={(e) => setSelectedYear(e.target.value)}
+        className="w-auto"
+      >
+        {[...Array(5)].map((_, i) => {
+          const year = moment().year() - 2 + i;
+          return (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          );
+        })}
+      </Form.Select>
+    </div>
+
+    {/* Staff Details Form */}
+    <div className="my-4 ">
+      {staffList.map((staff, index) => (
+        <div key={index} className="d-flex flex-wrap gap-2 justify-content-center align-items-center mb-2">
+          <Form.Control
+            type="text"
+            placeholder="Name"
+            value={staff.name}
+            onChange={(e) => handleChange(index, "name", e.target.value)}
+            className="w-25"
+          />
+          <Form.Control
+            type="number"
+            placeholder="Hours"
+            value={staff.hours}
+            onChange={(e) => handleChange(index, "hours", parseFloat(e.target.value))}
+            className="w-25"
+          />
+          <Form.Check
+            type="checkbox"
+            label="W-Off"
+            checked={staff.avoidWeekends}
+            onChange={(e) => handleChange(index, "avoidWeekends", e.target.checked)}
+            className=""
+          />
+          <Form.Check
+            type="checkbox"
+            label="N-Off"
+            checked={staff.allowNightShifts}
+            onChange={(e) => handleChange(index, "allowNightShifts", e.target.checked)}
+            className=""
+          />
+          <Button variant="danger" size="sm" onClick={() => removeRow(index)}>
+            <BsTrash size={13}/>
+          </Button>
+        </div>
+      ))}
+      
+      <div className="d-flex flex-wrap gap-2 justify-content-center">
+       
+        <Button className="mt-3 mb-4" style={{ backgroundColor: "#4D0FD8" }} onClick={addRow}>
           <BsPlus /> Add Staff
         </Button>
+
+      </div>
+      <div className="d-flex flex-wrap justify-content-center">
+        <p className=""><span className="fw-bold">W-0ff</span> means Weekend Off <span className="ms-3 fw-bold">N-Off</span> <span> means opt in for night shifs </span></p>
       </div>
       
+    </div>
+    
+    {/* Rota Table */}
+    <section className="mt-5">
+      <h2 className="text-center display-5 fw-bold my-4" style={{ color: "#592693" }}>STAFF ROTA</h2>
+      <div className="table-responsive">
+        <Table striped bordered hover>
+          <thead>
+            <tr>
+              <th style={{ backgroundColor: "#9E7BB3" }}>NAME</th>
+              <th style={{ backgroundColor: "#9E7BB3" }}>HOURS</th>
+              {Object.keys(shiftPatterns).map((day) => (
+                <th key={day} style={{ backgroundColor: "#9E7BB3" }}>{day}</th>
+              ))}
+              <th style={{ backgroundColor: "#9E7BB3" }}>WEEKLY HOURS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {staffList.map((staff, index) => (
+              <tr key={index}>
+                <td className="fw-bold" style={{ backgroundColor: "#C8A2A9" }}>{staff.name}</td>
+                <td className="fw-bold" style={{ backgroundColor: "#C8A2A9" }}>{staff.hours}</td>
+                {Object.keys(shiftPatterns).map((day) => (
+                  <td key={day} style={{ backgroundColor: "#C8A2A9" }}>
+                    {shifts[day]?.[staff.name] && (
+                      <div
+                        style={{
+                          backgroundColor: shiftColors[shifts[day][staff.name]],
+                          padding: "5px",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        {shifts[day][staff.name]}
+                      </div>
+                    )}
+                  </td>
+                ))}
+                <td className="fw-bold" style={{ backgroundColor: "#C8A2A9" }}>{staff.totalWeekHours}</td>
+              </tr>
+            ))}
 
-      {/* Rota Table section */}
-      <h2 className="display-5 fw-bold text-center my-4" style={{color:'#592693'}}>STAFF ROTA </h2>
-      <Table striped bordered hover responsive>
-        <thead >
-          <tr >
-            <th style={{ backgroundColor: "#9E7BB3"}}>NAME</th>
-            <th colSpan="1" style={{ backgroundColor: "#9E7BB3"}}>CONT. HRS</th>
-            {Object.keys(shiftPatterns).map(day => <th style={{ backgroundColor: "#9E7BB3"}} key={day}>{day}</th>)}
-            <th style={{ backgroundColor: "#9E7BB3"}}>HOURS/WEEK</th>
-            {/* <th>Exp Hours/ Month</th> */}
-          </tr>
-        </thead>
-        <tbody>
-          {staffList.map((staff, index) => (
-            <tr key={index}>
-              <td className="fw-bold" style={{ backgroundColor: "#C8A2A9" }}>{staff.name}</td>
-              <td className="fw-bold" style={{ backgroundColor: "#C8A2A9" }}>{staff.hours}</td>
-              {Object.keys(shiftPatterns).map(day => (
-                <td key={day} style={{ backgroundColor: "#C8A2A9" }}>
-                  {shifts[day]?.[staff.name] && (
-                    <div style={{ 
-                      backgroundColor: shiftColors[shifts[day][staff.name]],
+            {Array.from({ length: 4 }).map((_, rowIndex) => {
+              const shiftsForRow = {};
+              let hasShifts = false;
+              Object.keys(shiftPatterns).forEach(day => {
+                const shift = unassignedShifts[day]?.[rowIndex];
+                shiftsForRow[day] = shift || '';
+                if (shift) hasShifts = true;
+              });
+
+              return hasShifts ? (
+                <tr key={`bank-${rowIndex}`} style={{ backgroundColor: "##909090", color:'blue' }}>
+                  <td colSpan="2" style={{  }}>BANK SHIFT</td>
+                  {Object.keys(shiftPatterns).map(day => (
+                    <td key={day} >
+                      <div style={{ 
+                      backgroundColor: shiftColors[shiftsForRow[day]],
                       padding: "5px",
                       borderRadius: "4px"
                     }}>
-                      {shifts[day][staff.name]}
-                    </div>
-                  )}
-                </td>
-              ))}
-              <td className="fw-bold" style={{ backgroundColor: "#C8A2A9" }}>{staff.totalWeekHours}</td>
-              {/* <td className="fw-bold">{staff.totalMonthHours}</td> */}
-            </tr>
-          ))}
+                        {shiftsForRow[day]}
+                      </div>
+                      
+                    </td>
+                  ))}
+                  <td ></td>
+                </tr>
+              ) : null;
+            })}
+          </tbody>
+        </Table>
+      </div>
 
-          {Array.from({ length: 4 }).map((_, rowIndex) => {
-            const shiftsForRow = {};
-            let hasShifts = false;
-            Object.keys(shiftPatterns).forEach(day => {
-              const shift = unassignedShifts[day]?.[rowIndex];
-              shiftsForRow[day] = shift || '';
-              if (shift) hasShifts = true;
-            });
+      <Button onClick={assignShifts} className="mt-3" style={{ backgroundColor: "#4D0FD8" }}>
+        Assign / Reassign Shifts
+      </Button>
 
-            return hasShifts ? (
-              <tr key={`bank-${rowIndex}`} style={{ backgroundColor: "##909090", color:'blue' }}>
-                <td colSpan="2" style={{  }}>BANK SHIFT</td>
-                {Object.keys(shiftPatterns).map(day => (
-                  <td key={day} >
-                    <div style={{ 
-                    backgroundColor: shiftColors[shiftsForRow[day]],
-                    padding: "5px",
-                    borderRadius: "4px"
-                  }}>
-                      {shiftsForRow[day]}
-                    </div>
-                    
-                  </td>
-                ))}
-                <td ></td>
-              </tr>
-            ) : null;
-          })}
-        </tbody>
-      </Table>
-      <Button  onClick={assignShifts} className="mt-3 btn btn-lg" style={{backgroundColor:'#4D0FD8'}}>Assign / Reassign Shifts</Button>
-    </Container>
+    </section>
+    
+  </Container>
   );
 };
 
