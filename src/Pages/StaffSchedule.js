@@ -297,14 +297,14 @@ const StaffSchedule = () => {
           />
           <Form.Check
             type="checkbox"
-            label="W-Off"
+            label="W-OO"
             checked={staff.avoidWeekends}
             onChange={(e) => handleChange(index, "avoidWeekends", e.target.checked)}
             className=""
           />
           <Form.Check
             type="checkbox"
-            label="N-Off"
+            label="N-OI"
             checked={staff.allowNightShifts}
             onChange={(e) => handleChange(index, "allowNightShifts", e.target.checked)}
             className=""
@@ -323,7 +323,7 @@ const StaffSchedule = () => {
 
       </div>
       <div className="d-flex flex-wrap justify-content-center">
-        <p className=""><span className="fw-bold">W-0ff</span> means Weekend Off <span className="ms-3 fw-bold">N-Off</span> <span> means opt in for night shifs </span></p>
+        <p className=""><span className="fw-bold">W-OO</span> means Oopt out for Weekend <span className="ms-3 fw-bold">N-OI</span> <span> means opt in for night shifs </span></p>
       </div>
       
     </div>
