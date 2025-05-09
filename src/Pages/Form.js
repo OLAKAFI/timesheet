@@ -28,7 +28,7 @@ const Form = () => {
   const [contractHours, setContractHours] = useState();
   const [contractType, setContractType] = useState("");
   const [days, setDays] = useState([]);
-  const [hourlyRate, setHourlyRate] = useState(11.95);
+  const [hourlyRate, setHourlyRate] = useState(12.60);
   const [carryForward, setCarryForward] = useState(0); // Carry forward hours for overtime or time owed
   const [previousCarryForward, setPreviousCarryForward] = useState(0); // Carry-forward from the previous month
 
