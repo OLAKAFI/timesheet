@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Table, Form, Button } from "react-bootstrap";
 import { BsPlus, BsTrash } from "react-icons/bs";
 import "bootstrap/dist/css/bootstrap.min.css";
+import moment from "moment";
+
+
 
 const shiftPatterns = {
   MONDAY: ["08:00 - 20:00", "09:15 - 19:30", "10:00 - 19:30", "20:00 - 08:00"],
@@ -39,14 +42,38 @@ const calculateHours = (shift) => {
   return duration;
 };
 
+// Function to calculate the number of weekdays in the selected month, used for computing total monthly hours.
+const getWeekdaysInMonth = (year, month) => {
+  let weekdays = 0;
+  const daysInMonth = moment(`${year}-${month}`, "YYYY-MM").daysInMonth();
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dayOfWeek = moment(`${year}-${month}-${day}`, "YYYY-MM-DD").day();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) weekdays++; // Excluding weekends
+  }
+  return weekdays;
+};
+
 const StaffSchedule = () => {
-  const [staffList, setStaffList] = useState([{ name: "", hours: 0, totalWeekHours: 0 }]);
+  const [staffList, setStaffList] = useState([{ name: "", hours: 0, totalWeekHours: 0 , avoidWeekends: false, allowNightShifts: false}]);
   const [shifts, setShifts] = useState({});
   const [unassignedShifts, setUnassignedShifts] = useState({});
 
-  // ... (keep addRow, handleChange, removeRow functions the same)
-  const addRow = () => {
-    setStaffList([...staffList, { name: "", hours: 0, totalWeekHours: 0 }]);
+  // State variables to track the selected month and year for dynamic calculation of working hours.
+  const [selectedMonth, setSelectedMonth] = useState(moment().format("MM"));
+  const [selectedYear, setSelectedYear] = useState(moment().format("YYYY"));
+  
+  // Effect hook to recalculate monthly hours whenever month, year, or staff list changes.
+  useEffect(() => {
+    updateMonthlyHours();
+  }, [selectedMonth, selectedYear, staffList]);
+
+  // Function to update total month hours based on the number of weekdays in the selected month.
+  const updateMonthlyHours = () => {
+    const weekdays = getWeekdaysInMonth(selectedYear, selectedMonth);
+    setStaffList(staffList.map(staff => ({
+      ...staff,
+      totalMonthHours: staff.hours ? (staff.hours / 5) * weekdays : 0
+    })));
   };
 
   const handleChange = (index, field, value) => {
@@ -55,6 +82,20 @@ const StaffSchedule = () => {
     );
     setStaffList(updatedList);
   };
+
+  
+
+  // ... (keep addRow, handleChange, removeRow functions the same)
+  const addRow = () => {
+    setStaffList([...staffList, { name: "", hours: 0, totalWeekHours: 0 }]);
+  };
+
+  // const handleChange = (index, field, value) => {
+  //   const updatedList = staffList.map((staff, i) =>
+  //     i === index ? { ...staff, [field]: value } : staff
+  //   );
+  //   setStaffList(updatedList);
+  // };
 
   const removeRow = (index) => {
     const updatedList = staffList.filter((_, i) => i !== index);
@@ -92,6 +133,9 @@ const StaffSchedule = () => {
       totalHours[staff.name] = 0;
     });
   
+
+    
+
     // Process days in order to enable consecutive assignments
     daysOrder.forEach(day => {
       // Get previous day in sequence
@@ -129,9 +173,17 @@ const StaffSchedule = () => {
           
           const currentHours = totalHours[staff.name] || 0;
           const maxHours = staff.hours + 8;
+
+
           
           // Check hour capacity
           if (currentHours + shiftHours > maxHours) continue;
+          
+          // Prefrences check
+          if (shiftType === "night" && !staff.allowNightShifts) continue; // Assign night shift only if allowed
+          if (["SATURDAY", "SUNDAY"].includes(day) && staff.avoidWeekends) continue; // Skip weekends if avoided
+
+          
   
           // Check shift type transitions
           if (staff.lastShiftType && staff.lastShiftType !== shiftType) {
@@ -148,6 +200,8 @@ const StaffSchedule = () => {
             const currentIndex = daysOrder.indexOf(day);
             if (currentIndex - lastIndex > 1) continue;
           }
+
+  
   
           // Assign the shift
           staff.assignedDays.add(day);
@@ -170,6 +224,8 @@ const StaffSchedule = () => {
     setStaffList(staffData.map(staff => ({
       name: staff.name,
       hours: staff.hours,
+      avoidWeekends: staff.avoidWeekends,
+      allowNightShifts: staff.allowNightShifts,
       totalWeekHours: totalHours[staff.name] || 0
     })));
     
@@ -184,10 +240,28 @@ const StaffSchedule = () => {
   };
   
 
+  // MAIN CONTENT
   return (
-    <Container className="mt-4">
-      <h2 className="display-5 fw-bold text-center">STAFF ROTA</h2>
-      <div className="my-4">
+    <Container className="mt-5 mb-5">
+      <h2 className="display-5 fw-bold text-center my-4" style={{color:'#592693'}}>STAFF DETAILS</h2>
+      <div className="d-flex justify-content-between my-3 me-2">
+        {/* Dropdown for selecting the month, which triggers recalculations of monthly hours. */}
+        <Form.Select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="">
+          {moment.months().map((month, index) => (
+            <option key={index} value={String(index + 1).padStart(2, "0")}> {month} </option>
+          ))}
+        </Form.Select>
+        {/* Dropdown for selecting the year, which also updates the total monthly hours dynamically. */}
+        <Form.Select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="">
+          {[...Array(5)].map((_, i) => {
+            const year = moment().year() - 2 + i;
+            return <option key={year} value={year}>{year}</option>;
+          })}
+        </Form.Select>
+      </div>
+
+      {/* Input for the staff details, name and contract hours */}
+      <div className="my-5">
         {staffList.map((staff, index) => (
           <div key={index} className="d-flex align-items-center mb-2">
             <Form.Control
@@ -204,32 +278,48 @@ const StaffSchedule = () => {
               onChange={(e) => handleChange(index, "hours", parseFloat(e.target.value))}
               className="me-2"
             />
-            <Button variant="danger" onClick={() => removeRow(index)}>
+            <Form.Check
+              type="checkbox"
+              label="Avoid Weekends"
+              checked={staff.avoidWeekends}
+              onChange={(e) => handleChange(index, "avoidWeekends", e.target.checked)}
+            />
+            <Form.Check
+              type="checkbox"
+              label="Allow Night Shifts"
+              checked={staff.allowNightShifts}
+              onChange={(e) => handleChange(index, "allowNightShifts", e.target.checked)}
+            />
+            <Button style={{ backgroundColor: "#A50B5E" }} onClick={() => removeRow(index)}>
               <BsTrash />
             </Button>
           </div>
         ))}
-        <Button variant="primary" onClick={addRow}>
+        <Button className='mt-3' style={{backgroundColor:'#4D0FD8'}} onClick={addRow}>
           <BsPlus /> Add Staff
         </Button>
       </div>
+      
 
+      {/* Rota Table section */}
+      <h2 className="display-5 fw-bold text-center my-4" style={{color:'#592693'}}>STAFF ROTA </h2>
       <Table striped bordered hover responsive>
-        <thead>
-          <tr>
-            <th>NAME</th>
-            <th>CONTRACT HOURS</th>
-            {Object.keys(shiftPatterns).map(day => <th key={day}>{day}</th>)}
-            <th>TOTAL WEEK HOURS</th>
+        <thead >
+          <tr >
+            <th style={{ backgroundColor: "#9E7BB3"}}>NAME</th>
+            <th colSpan="1" style={{ backgroundColor: "#9E7BB3"}}>CONT. HRS</th>
+            {Object.keys(shiftPatterns).map(day => <th style={{ backgroundColor: "#9E7BB3"}} key={day}>{day}</th>)}
+            <th style={{ backgroundColor: "#9E7BB3"}}>HOURS/WEEK</th>
+            {/* <th>Exp Hours/ Month</th> */}
           </tr>
         </thead>
         <tbody>
           {staffList.map((staff, index) => (
             <tr key={index}>
-              <td>{staff.name}</td>
-              <td>{staff.hours}</td>
+              <td className="fw-bold" style={{ backgroundColor: "#C8A2A9" }}>{staff.name}</td>
+              <td className="fw-bold" style={{ backgroundColor: "#C8A2A9" }}>{staff.hours}</td>
               {Object.keys(shiftPatterns).map(day => (
-                <td key={day}>
+                <td key={day} style={{ backgroundColor: "#C8A2A9" }}>
                   {shifts[day]?.[staff.name] && (
                     <div style={{ 
                       backgroundColor: shiftColors[shifts[day][staff.name]],
@@ -241,7 +331,8 @@ const StaffSchedule = () => {
                   )}
                 </td>
               ))}
-              <td className="fw-bold">{staff.totalWeekHours}</td>
+              <td className="fw-bold" style={{ backgroundColor: "#C8A2A9" }}>{staff.totalWeekHours}</td>
+              {/* <td className="fw-bold">{staff.totalMonthHours}</td> */}
             </tr>
           ))}
 
@@ -256,9 +347,9 @@ const StaffSchedule = () => {
 
             return hasShifts ? (
               <tr key={`bank-${rowIndex}`} style={{ backgroundColor: "##909090", color:'blue' }}>
-                <td colSpan="2" style={{ backgroundColor: "#909090", color:'white' }}>BANK SHIFT</td>
+                <td colSpan="2" style={{  }}>BANK SHIFT</td>
                 {Object.keys(shiftPatterns).map(day => (
-                  <td key={day} style={{ backgroundColor: "#909090" }}>
+                  <td key={day} >
                     <div style={{ 
                     backgroundColor: shiftColors[shiftsForRow[day]],
                     padding: "5px",
@@ -269,13 +360,13 @@ const StaffSchedule = () => {
                     
                   </td>
                 ))}
-                <td style={{ backgroundColor: "#909090" }}></td>
+                <td ></td>
               </tr>
             ) : null;
           })}
         </tbody>
       </Table>
-      <Button variant="secondary" onClick={assignShifts} className="mt-3">Reassign Shifts</Button>
+      <Button  onClick={assignShifts} className="mt-3 btn btn-lg" style={{backgroundColor:'#4D0FD8'}}>Assign / Reassign Shifts</Button>
     </Container>
   );
 };
