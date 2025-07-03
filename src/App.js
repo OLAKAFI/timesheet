@@ -40,7 +40,7 @@ function App() {
           <Route path="/" element={<SignInSignUp setUsername={setUsername}  />} /> 
           <Route path="/dashboard" element={<Dashboard username={username} />} /> 
           <Route path="/timesheet" element={<Form />} />
-          <Route path="/rota" element={<StaffSchedule/>} />
+          {/* <Route path="/rota" element={<StaffSchedule/>} /> */}
 
         </Routes>
       </AuthProvider>
