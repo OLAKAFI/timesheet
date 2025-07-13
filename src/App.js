@@ -14,6 +14,9 @@ import { auth } from "../src/firebaseConfig";
 import { AuthProvider } from "./AuthProvider";
 import Rota from "./Pages/StaffSchedule";
 import StaffSchedule from "./Pages/StaffSchedule";
+import ContactPage from "./Pages/ContactPage";
+import FeaturesPage from "./Pages/FeaturesPage";
+import ComingSoon from "./Pages/ComingSoon";
 
 
 
@@ -40,6 +43,10 @@ function App() {
           <Route path="/" element={<SignInSignUp setUsername={setUsername}  />} /> 
           <Route path="/dashboard" element={<Dashboard username={username} />} /> 
           <Route path="/timesheet" element={<Form />} />
+          <Route path="/contact" element={<ContactPage />} />   
+          <Route path="/features" element={<FeaturesPage />} />
+          <Route path="/coming" element={<ComingSoon />} /> 
+
           {/* <Route path="/rota" element={<StaffSchedule/>} /> */}
 
         </Routes>
