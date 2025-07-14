@@ -1,16 +1,16 @@
 {
   "files": {
     "main.css": "/static/css/main.4cc7f09b.css",
-    "main.js": "/static/js/main.cd6afe29.js",
+    "main.js": "/static/js/main.5efb2fd2.js",
     "static/js/488.6583b1f4.chunk.js": "/static/js/488.6583b1f4.chunk.js",
     "static/media/shiftroomlogo.png": "/static/media/shiftroomlogo.4114547ee88598e70d8b.png",
     "index.html": "/index.html",
     "main.4cc7f09b.css.map": "/static/css/main.4cc7f09b.css.map",
-    "main.cd6afe29.js.map": "/static/js/main.cd6afe29.js.map",
+    "main.5efb2fd2.js.map": "/static/js/main.5efb2fd2.js.map",
     "488.6583b1f4.chunk.js.map": "/static/js/488.6583b1f4.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.4cc7f09b.css",
-    "static/js/main.cd6afe29.js"
+    "static/js/main.5efb2fd2.js"
   ]
 }
