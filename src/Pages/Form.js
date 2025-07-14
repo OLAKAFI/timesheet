@@ -909,7 +909,7 @@ const Form = () => {
                           )}
                         </div>
                         
-                        {/* <div className="d-flex flex-column">
+                        <div className="d-flex flex-column">
                           <BootstrapForm.Control
                             type="text"
                             placeholder="Start"
@@ -938,9 +938,9 @@ const Form = () => {
                               fontSize: '0.85rem'
                             }}
                           />
-                        </div> */}
+                        </div>
                         {/* mobile time input fix for iOS and Andriod */}
-                        <div className="d-flex flex-column">
+                        {/* <div className="d-flex flex-column">
                           <input
                             type="time"
                             placeholder="Start"
@@ -965,7 +965,7 @@ const Form = () => {
                               minHeight: '28px'
                             }}
                           />
-                        </div>
+                        </div> */}
                       </div>
                     );
                   })}
