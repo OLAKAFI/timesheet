@@ -1,7 +1,7 @@
 import React from "react";
 import { Navbar, Nav, Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import tlogo from '../style/srlogo.png';
+import tlogo from '../style/shiftroomlogo.png';
 
 const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
   const navigate = useNavigate();
@@ -35,9 +35,9 @@ const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
             src={tlogo}
             alt="ShiftRoom Logo"
             style={{ 
-              width: "50px", 
-              height: "auto",
-              maxHeight: "40px" // Better size control
+              // width: "50px", 
+              // height: "auto",
+              maxHeight: "70px" // Better size control
             }}
           />
           <span className="ms-2 fw-bold" style={{ 
@@ -84,7 +84,7 @@ const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
               </Nav.Link>
             ) : (
               <>
-                <Nav.Link 
+                {/* <Nav.Link 
                   href="/" 
                   className="fw-medium px-3 py-2 py-lg-1 me-2"
                   style={{
@@ -99,8 +99,8 @@ const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
                   aria-label="Sign up or login"
                 >
                   SignUp | Login
-                </Nav.Link>
-                <Nav.Link
+                </Nav.Link> */}
+                {/* <Nav.Link
                   onClick={handleSignOut}
                   className="fw-medium px-3 py-2 py-lg-1"
                   style={{
@@ -115,7 +115,7 @@ const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
                   aria-label="Sign out"
                 >
                   SignOut
-                </Nav.Link>
+                </Nav.Link> */}
               </>
             )}
           </Nav>

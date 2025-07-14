@@ -1,9 +1,12 @@
 // FeaturesPage.jsx
 import React from 'react';
+import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { FaChartLine, FaClock, FaCalculator, FaMobileAlt, FaSyncAlt, FaComments } from 'react-icons/fa';
 
 const FeaturesPage = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="py-5" style={{ 
       backgroundColor: '#f8fafc',
@@ -30,6 +33,7 @@ const FeaturesPage = () => {
                   borderRadius: '12px',
                   padding: '12px 24px'
                 }}
+                onClick={() => navigate("/timesheet")}
               >
                 Get Started
               </Button>
@@ -151,7 +155,7 @@ const FeaturesPage = () => {
             <p className="mb-0">Time Saved Weekly</p>
           </Col>
           <Col md={3} className="text-center text-white py-4">
-            <h3 className="display-4 fw-bold mb-2">10k+</h3>
+            <h3 className="display-4 fw-bold mb-2">1k+</h3>
             <p className="mb-0">Active Users</p>
           </Col>
           <Col md={3} className="text-center text-white py-4">

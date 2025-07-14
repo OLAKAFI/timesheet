@@ -45,7 +45,7 @@ const Footer = () => {
               Quick Links
             </h3>
             <ul className="list-unstyled">
-              {['Dashboard', 'About', 'Contact', 'Features','Coming'].map((item) => (
+              {['Contact', 'Features','Coming'].map((item) => (
                 <li key={item} className="mb-2">
                   <a 
                     href={`/${item.toLowerCase()}`} 

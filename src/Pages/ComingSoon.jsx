@@ -57,7 +57,7 @@ const ComingSoon = () => {
               ShiftRoom: The smart way to log hours & calculate your pay
             </p>
             
-            <div className="d-flex justify-content-center flex-wrap gap-4 mb-5">
+            {/* <div className="d-flex justify-content-center flex-wrap gap-4 mb-5">
               {[
                 { icon: <FaClock size={36} />, text: 'Instant overtime calculations' },
                 { icon: <FaCalculator size={36} />, text: 'Accurate salary projections' },
@@ -69,9 +69,9 @@ const ComingSoon = () => {
                   <p className="mb-0 fs-5">{item.text}</p>
                 </div>
               ))}
-            </div>
+            </div> */}
             
-            <div className="bg-white rounded-4 shadow-lg p-4 p-md-5 mb-5">
+            {/* <div className="bg-white rounded-4 shadow-lg p-4 p-md-5 mb-5">
               {!submitted ? (
                 <>
                   <h3 className="fw-bold mb-4" style={{ color: '#006D7D' }}>
@@ -127,9 +127,9 @@ const ComingSoon = () => {
                   </p>
                 </div>
               )}
-            </div>
+            </div> */}
             
-            <div className="mb-4">
+            <div className="my-4">
               <p className="fs-5 mb-3 opacity-90">
                 Join 2,500+ early registrants from:
               </p>

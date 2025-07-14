@@ -21,7 +21,7 @@ const Dashboard = ({ username }) => {
     },
     {
       title: "Shift Planning",
-      description: "Organize your work schedule efficiently",
+      description: "Organize your work schedule ",
       icon: "📅"
     }
   ];
@@ -105,7 +105,7 @@ const Dashboard = ({ username }) => {
       </div>
 
       {/* Features Section */}
-      <Container className="py-5 py-md-6">
+      {/* <Container className="py-5 py-md-6">
         <Row className="mb-4 mb-md-5">
           <Col className="text-center">
             <h2 
@@ -170,6 +170,112 @@ const Dashboard = ({ username }) => {
                     Get started →
                   </Button>
                 </div>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </Container> */}
+
+      <Container className="py-5 py-md-6">
+        <Row className="mb-4 mb-md-5">
+          <Col className="text-center">
+            <h2 
+              className="fw-bold mb-3"
+              style={{ 
+                color: '#006D7D', 
+                fontSize: 'clamp(1.75rem, 2.5vw, 2.5rem)',
+                fontFamily: "'Segoe UI', 'Roboto', sans-serif" 
+              }}
+            >
+              Powerful Features
+            </h2>
+            <p 
+              className="text-muted mx-auto"
+              style={{ 
+                maxWidth: '600px', 
+                fontSize: 'clamp(1rem, 1.2vw, 1.25rem)'
+              }}
+            >
+              Everything you need to manage your work hours and earnings
+            </p>
+          </Col>
+        </Row>
+        
+        <Row className="g-4 justify-content-center">
+          {features.map((feature, index) => (
+            <Col 
+              key={index} 
+              xs={12} 
+              sm={10} 
+              md={8}
+              lg={4} 
+              className="d-flex justify-content-center"
+            >
+              <Card 
+                className="border-0 shadow-sm h-100 rounded-3 overflow-hidden w-100"
+                style={{ 
+                  transition: 'transform 0.3s ease',
+                  maxWidth: '380px'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
+              >
+                <Card.Body className="p-4 d-flex flex-column align-items-center text-center">
+                  <div 
+                    className="mb-3 d-flex align-items-center justify-content-center"
+                    style={{ 
+                      color: '#5E7CE2', 
+                      fontSize: '3rem',
+                      width: '80px',
+                      height: '80px',
+                      backgroundColor: 'rgba(94, 124, 226, 0.1)',
+                      borderRadius: '50%'
+                    }}
+                  >
+                    {feature.icon}
+                  </div>
+                  <Card.Title 
+                    className="fw-semibold mb-3"
+                    style={{ 
+                      color: '#006D7D', 
+                      fontSize: 'clamp(1.25rem, 1.5vw, 1.5rem)',
+                      fontFamily: "'Segoe UI', 'Roboto', sans-serif" 
+                    }}
+                  >
+                    {feature.title}
+                  </Card.Title>
+                  <Card.Text 
+                    className="mb-4" 
+                    style={{ 
+                      color: '#5c5c5c',
+                      fontSize: 'clamp(0.95rem, 1.1vw, 1.05rem)'
+                    }}
+                  >
+                    {feature.description}
+                  </Card.Text>
+                  <Button
+                    variant="outline-primary"
+                    className="mt-auto fw-medium align-self-center"
+                    style={{ 
+                      color: '#5E7CE2',
+                      borderColor: '#5E7CE2',
+                      borderRadius: '30px',
+                      padding: '8px 20px',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#5E7CE2';
+                      e.currentTarget.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = '#5E7CE2';
+                    }}
+                    onClick={() => navigate("/timesheet")}
+                  >
+                    Get started
+                  </Button>
+                </Card.Body>
               </Card>
             </Col>
           ))}

@@ -28,7 +28,7 @@ const Form = () => {
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [contractHours, setContractHours] = useState();
-    const [contractType, setContractType] = useState("");
+    const [contractType, setContractType] = useState("Contract");
     
     // Add new state for company
     const [company, setCompany] = useState("My Company");
@@ -909,7 +909,7 @@ const Form = () => {
                           )}
                         </div>
                         
-                        <div className="d-flex flex-column">
+                        {/* <div className="d-flex flex-column">
                           <BootstrapForm.Control
                             type="text"
                             placeholder="Start"
@@ -936,6 +936,33 @@ const Form = () => {
                             style={{ 
                               backgroundColor: 'transparent',
                               fontSize: '0.85rem'
+                            }}
+                          />
+                        </div> */}
+                        {/* mobile time input fix for iOS and Andriod */}
+                        <div className="d-flex flex-column">
+                          <input
+                            type="time"
+                            placeholder="Start"
+                            value={day.timeStart}
+                            onChange={(e) => handleInputChange(index, "timeStart", e.target.value)}
+                            className="mb-1 time-input border-0 p-1 text-center w-100"
+                            style={{ 
+                              backgroundColor: 'transparent',
+                              fontSize: '0.85rem',
+                              minHeight: '28px'
+                            }}
+                          />
+                          <input
+                            type="time"
+                            placeholder="End"
+                            value={day.timeEnd}
+                            onChange={(e) => handleInputChange(index, "timeEnd", e.target.value)}
+                            className="time-input border-0 p-1 text-center w-100"
+                            style={{ 
+                              backgroundColor: 'transparent',
+                              fontSize: '0.85rem',
+                              minHeight: '28px'
                             }}
                           />
                         </div>

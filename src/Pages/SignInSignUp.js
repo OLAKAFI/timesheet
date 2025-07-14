@@ -82,6 +82,7 @@ const SignInSignUp = ({ setUsername }) => {
           } 
         } 
       });
+      
     } catch (error) {
       console.error("Authentication Error:", error);
       
@@ -172,7 +173,7 @@ const SignInSignUp = ({ setUsername }) => {
         </Col>
 
         {/* Right Side - Form */}
-        <Col 
+                <Col 
           md={6} 
           className="d-flex align-items-center justify-content-center p-4 p-md-5"
           style={{ backgroundColor: '#f8fafc' }}
@@ -181,7 +182,7 @@ const SignInSignUp = ({ setUsername }) => {
             className="w-100" 
             style={{ maxWidth: '450px' }}
           >
-            <div className="text-center mb-5">
+            <div className="text-center mb-4">
               <h2 
                 className="fw-bold mb-1"
                 style={{
@@ -200,6 +201,40 @@ const SignInSignUp = ({ setUsername }) => {
                   ? "Start tracking your work hours today" 
                   : "Sign in to continue your work journey"}
               </p>
+            </div>
+
+            {/* Tab Navigation */}
+            <div className="d-flex mb-4 border rounded-pill overflow-hidden">
+              <button
+                className={`flex-grow-1 py-3 fw-bold border-0 ${!isSignUp ? 'active-tab' : 'inactive-tab'}`}
+                onClick={() => {
+                  setIsSignUp(false);
+                  setError("");
+                }}
+                style={{
+                  backgroundColor: !isSignUp ? '#006D7D' : 'transparent',
+                  color: !isSignUp ? 'white' : '#006D7D',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+              >
+                Sign In
+              </button>
+              <button
+                className={`flex-grow-1 py-3 fw-bold border-0 ${isSignUp ? 'active-tab' : 'inactive-tab'}`}
+                onClick={() => {
+                  setIsSignUp(true);
+                  setError("");
+                }}
+                style={{
+                  backgroundColor: isSignUp ? '#006D7D' : 'transparent',
+                  color: isSignUp ? 'white' : '#006D7D',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+              >
+                Sign Up
+              </button>
             </div>
 
             <Card className="border-0 shadow-sm rounded-3 overflow-hidden">
@@ -309,7 +344,7 @@ const SignInSignUp = ({ setUsername }) => {
                 {/* Google Sign-In */}
                 <Button
                   variant="outline-light"
-                  className="w-100 py-3 d-flex align-items-center justify-content-center border-1"
+                  className="w-100 py-3 d-flex align-items-center justify-content-center border-1 mb-3"
                   style={{ 
                     borderColor: '#ddd',
                     borderRadius: '10px',
@@ -328,7 +363,7 @@ const SignInSignUp = ({ setUsername }) => {
                 </Button>
 
                 {/* Toggle between Sign In/Sign Up */}
-                <div className="text-center mt-4 pt-2">
+                <div className="text-center mt-3 pt-2">
                   <p className="mb-0" style={{ color: '#777' }}>
                     {isSignUp
                       ? "Already have an account? "
