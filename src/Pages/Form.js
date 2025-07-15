@@ -940,7 +940,7 @@ const Form = () => {
                           />
                         </div>
                         {/* mobile time input fix for iOS and Andriod */}
-                        {/* <div className="d-flex flex-column">
+                        <div className="d-flex flex-column">
                           <input
                             type="time"
                             placeholder="Start"
@@ -965,7 +965,7 @@ const Form = () => {
                               minHeight: '28px'
                             }}
                           />
-                        </div> */}
+                        </div>
                       </div>
                     );
                   })}

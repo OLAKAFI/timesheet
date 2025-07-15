@@ -19,24 +19,69 @@ const SignInSignUp = ({ setUsername }) => {
   
   const navigate = useNavigate();
 
-  const handleGoogleSignIn = async () => {
+  // const handleGoogleSignIn = async () => {
+  //   try {
+  //     const result = await signInWithPopup(auth, provider);
+  //     const user = result.user;
+  //     setUser(user);
+  //     setUsername(user.displayName);
+  //     navigate("/dashboard", { 
+  //       state: { 
+  //         user: { 
+  //           email: user.email, 
+  //           displayName: user.displayName || user.email, 
+  //           uid: user.uid 
+  //         } 
+  //       } 
+  //     });
+  //   } catch (error) {
+  //     console.error("Google Sign-In Error:", error.message);
+  //     setError(error.message);
+  //   }
+  // };
+
+
+  // Testing Google SignIn
+    const handleGoogleSignIn = async () => {
     try {
+      // Add prompt parameter to force account selection
+      provider.setCustomParameters({
+        prompt: "select_account"
+      });
+      
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+      
+      // Ensure we have a display name (use email if missing)
+      const displayName = user.displayName || user.email.split('@')[0] || user.email;
+      
+      // Update local state and parent component
       setUser(user);
-      setUsername(user.displayName);
-      navigate("/dashboard", { 
-        state: { 
-          user: { 
-            email: user.email, 
-            displayName: user.displayName || user.email, 
-            uid: user.uid 
-          } 
-        } 
+      setLocalUsername(displayName);
+      setUsername(displayName);
+      
+      // Navigate with consistent user data format
+      navigate("/dashboard", {
+        state: {
+          user: {
+            email: user.email,
+            displayName: displayName,
+            uid: user.uid
+          }
+        }
       });
     } catch (error) {
-      console.error("Google Sign-In Error:", error.message);
-      setError(error.message);
+      console.error("Google Sign-In Error:", error);
+      
+      // Enhanced error messages
+      let errorMessage = "Google authentication failed";
+      if (error.code === "auth/popup-closed-by-user") {
+        errorMessage = "Popup closed before completing sign-in";
+      } else if (error.code === "auth/account-exists-with-different-credential") {
+        errorMessage = "Account already exists with different method";
+      }
+      
+      setError(errorMessage);
     }
   };
 
