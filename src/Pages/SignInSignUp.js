@@ -42,7 +42,7 @@ const SignInSignUp = ({ setUsername }) => {
 
 
   // Testing Google SignIn
-    const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = async () => {
     try {
       // Add prompt parameter to force account selection
       provider.setCustomParameters({

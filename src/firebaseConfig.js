@@ -1,6 +1,6 @@
-import { initializeApp} from "firebase/app";
+import { initializeApp, firebase } from "firebase/app";
 import "firebase/firestore";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 
@@ -21,15 +21,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-
-// Fix for CORS issues
-auth.useDeviceLanguage();
-
-const provider = new GoogleAuthProvider();
-provider.addScope('profile');
-provider.addScope('email');
-
-export { provider };
 
 // Initialize Firestore
 export const firestore = getFirestore(app);

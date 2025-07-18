@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Container, Row, Col } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -17,16 +18,18 @@ const Footer = () => {
           {/* Brand Section */}
           <Col xs={12} md={4} className="text-center text-md-start">
             <div className="d-flex flex-column align-items-center align-items-md-start">
-              <h2 
+              <Link to={`/${"dashboard"}`} className="text-decoration-none mb-3">
+                <h2 
                 className="mb-2 fw-bold" 
                 style={{
                   color: '#006D7D',
                   fontSize: '1.75rem',
                   letterSpacing: '-0.5px'
                 }}
-              >
-                ShiftRoom
-              </h2>
+                >
+                  ShiftRoom
+                </h2>
+              </Link>
               <p 
                 className="mb-0 text-muted" 
                 style={{ maxWidth: '280px', fontSize: '0.9rem' }}
@@ -45,10 +48,10 @@ const Footer = () => {
               Quick Links
             </h3>
             <ul className="list-unstyled">
-              {['Contact', 'Features','Coming'].map((item) => (
+              {['Contact', 'Features', 'Coming'].map((item) => (
                 <li key={item} className="mb-2">
-                  <a 
-                    href={`/${item.toLowerCase()}`} 
+                  <Link  // Changed from <a> to <Link>
+                    to={`/${item.toLowerCase()}`} 
                     className="text-decoration-none d-inline-block py-1"
                     style={{
                       color: '#5c5c5c',
@@ -67,7 +70,7 @@ const Footer = () => {
                     aria-label={`Navigate to ${item}`}
                   >
                     {item}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

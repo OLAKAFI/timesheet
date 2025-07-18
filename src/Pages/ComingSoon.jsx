@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import { FaClock, FaCalculator, FaChartLine, FaMobileAlt, FaEnvelope } from 'react-icons/fa';
 
@@ -11,6 +11,11 @@ const ComingSoon = () => {
     // Add your email collection logic here
     setSubmitted(true);
   };
+
+  // Extra insurance to scroll to top
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div 

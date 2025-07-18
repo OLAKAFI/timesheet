@@ -1,11 +1,16 @@
 // FeaturesPage.jsx
-import React from 'react';
+import {React, useEffect} from 'react';
 import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { FaChartLine, FaClock, FaCalculator, FaMobileAlt, FaSyncAlt, FaComments } from 'react-icons/fa';
 
 const FeaturesPage = () => {
   const navigate = useNavigate();
+  
+  // Extra insurance to scroll to top
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="py-5" style={{ 

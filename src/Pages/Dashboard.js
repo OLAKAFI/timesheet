@@ -44,6 +44,11 @@ const Dashboard = ({ username }) => {
     return '50px';
   };
 
+  // Extra insurance to scroll to top
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <Container fluid className="px-0 overflow-hidden">
       {/* Hero Section */}

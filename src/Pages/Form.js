@@ -58,6 +58,11 @@ const Form = () => {
   
   
     const navigate = useNavigate();
+
+    // Extra insurance to scroll to top
+    useEffect(() => {
+      window.scrollTo(0, 0);
+    }, []);
   
   
   

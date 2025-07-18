@@ -1,9 +1,14 @@
 // ContactPage.jsx
-import React from 'react';
+import {React, useEffect} from 'react';
 import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 import { FaEnvelope, FaMapMarkerAlt, FaPhone, FaComments } from 'react-icons/fa';
 
 const ContactPage = () => {
+  // Extra insurance to scroll to top
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="py-5" style={{ 
       backgroundColor: '#ffffff',
