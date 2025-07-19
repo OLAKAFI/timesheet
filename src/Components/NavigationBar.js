@@ -1,10 +1,12 @@
 import React from "react";
-import { Navbar, Nav, Container } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { Navbar, Nav, Container, Button, Col } from "react-bootstrap";
+import { useNavigate, useLocation } from "react-router-dom";
+import { FaSignOutAlt, FaClock, FaMoneyBillWave, FaCalendarAlt, FaCalculator } from "react-icons/fa";
 import tlogo from '../style/shiftroomlogo.png';
 
 const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = () => {
     setAuthenticated(false);
@@ -17,44 +19,43 @@ const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
     };
   };
 
+  // Check if we're on authentication pages
+  const isAuthPage = location.pathname === "/";
+
   return (
     <Navbar 
       bg="light" 
       expand="lg" 
       className="shadow-sm py-2"
-      style={{ backgroundColor: '#f8f9fa!important' }} // Ensures light background
+      style={{ backgroundColor: '#f8f9fa!important' }}
     >
-      <Container fluid className="px-3 px-md-4"> {/* Improved spacing */}
+      <Container fluid className="px-3 px-md-4">
         {/* Logo & Brand */}
         <Navbar.Brand 
           href="/dashboard" 
-          className="d-flex align-items-center me-0 me-md-4" // Better spacing
+          className="d-flex align-items-center me-0 me-md-4"
           aria-label="ShiftRoom Home"
         >
           <img
             src={tlogo}
             alt="ShiftRoom Logo"
-            style={{ 
-              // width: "50px", 
-              // height: "auto",
-              maxHeight: "70px" // Better size control
-            }}
+            style={{ maxHeight: "70px" }}
           />
           <span className="ms-2 fw-bold" style={{ 
-            color: '#006D7D', // Primary brand color
-            fontSize: 'clamp(1.15rem, 1.5vw, 1.6rem)', // Responsive font size
+            color: '#006D7D',
+            fontSize: 'clamp(1.15rem, 1.5vw, 1.6rem)',
             letterSpacing: '-0.5px',
-            fontFamily: "'Segoe UI', 'Roboto', sans-serif" // Modern font stack
+            fontFamily: "'Segoe UI', 'Roboto', sans-serif"
           }}>
             ShiftRoom
           </span>
         </Navbar.Brand>
 
-        {/* Responsive Toggle - Improved accessibility */}
+        {/* Responsive Toggle */}
         <Navbar.Toggle 
           aria-controls="navbar-nav" 
           aria-label="Toggle navigation"
-          className="border-0 py-1 px-2" // Cleaner appearance
+          className="border-0 py-1 px-2"
         >
           <span className="navbar-toggler-icon"></span>
         </Navbar.Toggle>
@@ -62,15 +63,16 @@ const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
         {/* Navigation Links */}
         <Navbar.Collapse 
           id="navbar-nav" 
-          className="justify-content-end" // Better alignment
+          className="justify-content-end"
         >
           <Nav>
-            {isAuthenticated ? (
+            {/* For authenticated users */}
+            {isAuthenticated && !isAuthPage && (
               <Nav.Link
                 onClick={handleSignOut}
                 className="fw-medium px-3 py-2 py-lg-1"
                 style={{
-                  color: '#D32F2F', // Accessible red
+                  color: '#D32F2F',
                   fontSize: '1rem',
                   borderRadius: '4px',
                   transition: 'all 0.2s ease',
@@ -82,41 +84,49 @@ const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
               >
                 Sign Out
               </Nav.Link>
-            ) : (
-              <>
-                {/* <Nav.Link 
-                  href="/" 
-                  className="fw-medium px-3 py-2 py-lg-1 me-2"
-                  style={{
-                    color: '#006D7D', // Brand color
-                    fontSize: '1rem',
-                    borderRadius: '4px',
-                    transition: 'all 0.2s ease',
-                    fontFamily: "'Segoe UI', 'Roboto', sans-serif"
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0, 109, 125, 0.1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                  aria-label="Sign up or login"
-                >
-                  SignUp | Login
-                </Nav.Link> */}
-                {/* <Nav.Link
-                  onClick={handleSignOut}
-                  className="fw-medium px-3 py-2 py-lg-1"
-                  style={{
-                    color: '#5E7CE2', // Secondary brand color
-                    fontSize: '1rem',
-                    borderRadius: '4px',
-                    transition: 'all 0.2s ease',
-                    fontFamily: "'Segoe UI', 'Roboto', sans-serif"
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(94, 124, 226, 0.1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                  aria-label="Sign out"
-                >
-                  SignOut
-                </Nav.Link> */}
-              </>
+            )}
+            
+            {/* For unauthenticated users */}
+            {!isAuthenticated && !isAuthPage && (
+              <Nav.Link 
+                href="/" 
+                className="fw-medium  py-2 py-lg-1"
+                style={{
+                  color: '',
+                  // fontSize: '1.2rem',
+                  borderRadius: '',
+                  // transition: 'all 0.2s ease',
+                  fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+                }}
+                // onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(230, 151, 131, 0.1)'}
+                // onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                aria-label="Sign out"
+              >
+                    <Col md="auto" className="mt-3 mt-md-0">
+                      <Button 
+                        variant="light" 
+                        onClick={handleSignOut}
+                        className="d-flex align-items-center fw-bold"
+                        style={{
+                          // borderRadius: '12px',
+                          padding: '12px 24px',
+                          color: 'rgba(216, 59, 59, 0.8)',
+                          // transition: 'all 0.3s ease'
+                        }}
+                        // onMouseEnter={(e) => {
+                        //   e.currentTarget.style.backgroundColor = '#f0f8ff';
+                        //   e.currentTarget.style.transform = 'translateY(-2px)';
+                        // }}
+                        // onMouseLeave={(e) => {
+                        //   e.currentTarget.style.backgroundColor = 'white';
+                        //   e.currentTarget.style.transform = 'none';
+                        // }}
+                      >
+                        <FaSignOutAlt className="me-2" />
+                        Sign Out
+                      </Button>
+                    </Col>
+              </Nav.Link>
             )}
           </Nav>
         </Navbar.Collapse>

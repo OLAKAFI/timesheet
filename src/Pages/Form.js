@@ -644,7 +644,8 @@ const Form = () => {
                         Track your working hours and calculate your earnings
                       </p>
                     </Col>
-                    <Col md="auto" className="mt-3 mt-md-0">
+                    {/* SignOut Button Removed */}
+                    {/* <Col md="auto" className="mt-3 mt-md-0">
                       <Button 
                         variant="light" 
                         onClick={handleSignOut}
@@ -667,7 +668,7 @@ const Form = () => {
                         <FaSignOutAlt className="me-2" />
                         Sign Out
                       </Button>
-                    </Col>
+                    </Col> */}
                   </Row>
                 </div>
 
