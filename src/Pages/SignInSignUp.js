@@ -403,7 +403,7 @@ const SignInSignUp = ({ setUsername }) => {
                 >
                   <FcGoogle className="fs-4 me-2" />
                   <span className="fw-medium">
-                    {isSignUp ? "Sign up with Google" : "Sign in with Google"}
+                    {isSignUp ? "SignUp With Google" : "Sign In With Google"}
                   </span>
                 </Button>
 
