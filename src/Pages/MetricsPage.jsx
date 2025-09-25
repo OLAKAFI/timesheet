@@ -713,7 +713,7 @@ const MetricsPage = () => {
                 
                 {/* Month Selection Dropdown */}
                 <Form.Group className="mb-2 mb-md-3">
-                  <Form.Label className="small fw-bold">Select Month</Form.Label>
+                  {/* <Form.Label className="small fw-bold">Select Month</Form.Label> */}
                   <Form.Select 
                     size="sm"
                     value={`${selectedDate.getFullYear()}-${selectedDate.getMonth()}`}

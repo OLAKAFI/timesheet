@@ -9,7 +9,7 @@ import { updateProfile } from "firebase/auth";
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-const SignInSignUp = ({ setUsername }) => {
+const SignInSignUpBackup = ({ setUsername }) => {
   const [isSignUp, setIsSignUp] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -445,4 +445,4 @@ const SignInSignUp = ({ setUsername }) => {
   );
 };
 
-export default SignInSignUp;
+export default SignInSignUpBackup;

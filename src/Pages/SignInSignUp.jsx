@@ -323,10 +323,7 @@ const SignInSignUp = ({ setUsername }) => {
                   </Button>
                 </Form>
 
-                {/* Compact Divider */}
-                {/* <div className="divider compact-divider my-3">
-                  <span className="divider-text small">or continue with</span>
-                </div> */}
+
 
                 {/* Google Sign-In */}
                 <Button
@@ -335,7 +332,7 @@ const SignInSignUp = ({ setUsername }) => {
                   onClick={handleGoogleSignIn}
                   disabled={isLoading}
                 >
-                  <span className="divider-text small">or continue with</span>
+                  <span className="divider-text  me-2 ">or continue with Google</span>
                   <FcGoogle className="google-icon me-2" />
                 </Button>
 

@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import './App.css';
 import Form from './Pages/Form';
 import { useState } from 'react';
-import SignInSignUp from './Pages/SignInSignUpBackUp';
+import SignInSignUp from './Pages/SignInSignUp';
 import Dashboard from "./Pages/Dashboard";
 import NavigationBar from "./Components/NavigationBar";
 import Footer from "./Components/Footer";

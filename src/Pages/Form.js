@@ -662,194 +662,168 @@ const Form = () => {
     };
 
   return (
-    <div className="dashboard-container">
-          <Container fluid className="px-3 px-md-4 py-3">
-            {/* Header Section */}
-            <div className="dashboard-header rounded-4 p-3 p-md-4 mb-3 mb-md-4 text-white">
-              <Row className="align-items-center">
-                <Col xs={6} md={8} className="text-center text-md-start">
-                  <h1 className="h3 h1-md fw-bold mb-2 mb-md-3">
-                        <FaCalculator className="me-2" />
-                        SHIFTROOM EXPLORER
-                      </h1>
-                      <p className="mb-0 fs-5 opacity-90">
-                        Track your working hours and calculate your earnings
-                      </p>
-                </Col>
+  <div className="dashboard-container">
+        <Container fluid className="px-3 px-md-4 py-3 h-100">
+          {/* Header Section - Same as before */}
+          <div className="dashboard-header rounded-4 p-3 p-md-4 mb-3 mb-md-4 text-white">
+            <Row className="align-items-center">
+              <Col xs={6} md={8} className="text-center text-md-start">
+                <h1 className="h3 h1-md fw-bold mb-2 mb-md-3">
+                  <FaCalculator className="me-2" />
+                  SHIFTROOM EXPLORER
+                </h1>
+                <p className="mb-0 fs-5 opacity-90">
+                  Track your working hours and calculate your earnings
+                </p>
+              </Col>
+              <Col xs={6} md={4} className="text-end ">
+                <Button variant="light" 
+                  onClick={() => navigate("/dashboard/metrics")}
+                  style={{
+                    borderRadius: '12px',
+                    padding: '12px 24px',
+                    color: '#006D7D',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f0f8ff';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'white';
+                    e.currentTarget.style.transform = 'none';
+                  }}
+                  className="fw-bold"
+                >
+                  Get Insight
+                  <FaArrowRight className="ms-3 ms-md-3" />
+                </Button>
+              </Col>
+            </Row>
+          </div>
 
-                    
-               {/* Get Insight Button */}
-                <Col  xs={6} md={4} className="text-end ">
-                      <Button variant="light" 
-                        onClick={() => navigate("/dashboard/metrics")}
-                         style={{
-                          borderRadius: '12px',
-                          padding: '12px 24px',
-                          color: '#006D7D',
-                          transition: 'all 0.3s ease'
-                        }}
+          {/* Main Content - Optimized for Viewport Height */}
+          <Row className="main-content-row g-3">
+            {/* Left Panel - Input Controls */}
+            <Col lg={4} className="left-panel">
+              <Card className="border-0 shadow-sm h-100 rounded-3">
+                <Card.Body className="p-4">
+                  <h3 className="h4 fw-bold mb-4" style={{ color: '#006D7D' }}>
+                    <FaCalendarAlt className="me-2" />
+                    Contract Details
+                  </h3>
 
-                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f0f8ff';
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'white';
-                          e.currentTarget.style.transform = 'none';
-                        }}
-                        className="fw-bold"
-                      >
-                        Get Insight
-                        <FaArrowRight className="ms-3 ms-md-3" />
-                      </Button>
-                      {/* SignOut Button Removed */}
-                      {/* <Button 
-                        variant="light" 
-                        onClick={handleSignOut}
-                        className="d-flex align-items-center fw-bold"
-                        style={{
-                          borderRadius: '12px',
-                          padding: '12px 24px',
-                          color: '#006D7D',
-                          transition: 'all 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f0f8ff';
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'white';
-                          e.currentTarget.style.transform = 'none';
-                        }}
-                      >
-                        <FaSignOutAlt className="me-2" />
-                        Sign Out
-                      </Button> */}
-                </Col>
-                  </Row>
-                </div>
+                  {/* Your existing form controls remain the same */}
+                  <BootstrapForm.Group className="mb-4">
+                    <BootstrapForm.Label className="fw-medium text-muted">Company</BootstrapForm.Label>
+                    <BootstrapForm.Select
+                      value={company}
+                      onChange={(e) => handleCompanyChange(e.target.value)}
+                      className="py-3 px-3 border-1"
+                      style={{ 
+                        borderColor: '#ddd',
+                        borderRadius: '10px',
+                        backgroundColor: '#fdfdfd'
+                      }}
+                    >
+                      <option value="My Company">My Company</option>
+                      <option value="Other Company">Other Company</option>
+                    </BootstrapForm.Select>
+                  </BootstrapForm.Group>
+                  
+                  {/* ... other form controls ... */}
+                  <BootstrapForm.Group className="mb-4">
+                    <BootstrapForm.Label className="fw-medium text-muted">Contract Type</BootstrapForm.Label>
+                    <BootstrapForm.Select
+                      value={contractType}
+                      onChange={(e) => handleContractTypeChange(e.target.value)}
+                      className="py-3 px-3 border-1"
+                      style={{ 
+                        borderColor: '#ddd',
+                        borderRadius: '10px',
+                        backgroundColor: '#fdfdfd'
+                      }}
+                    >
+                      <option value="">Select Contract Type</option>
+                      <option value="Contract">Contract</option>
+                      <option value="Bank">Bank</option>
+                    </BootstrapForm.Select>
+                  </BootstrapForm.Group>
 
-        {/* Main Content */}
-        <Row>
-          {/* Left Panel - Input Controls */}
-          <Col lg={4} className="mb-4 mb-lg-0">
-            <Card className="border-0 shadow-sm h-100 rounded-3">
-              <Card.Body className="p-4">
-                <h3 className="h4 fw-bold mb-4" style={{ color: '#006D7D' }}>
-                  <FaCalendarAlt className="me-2" />
-                  Contract Details
-                </h3>
+                  {/* Contract Hours */}
+                  <BootstrapForm.Group className="mb-4">
+                    <BootstrapForm.Label className="fw-medium text-muted">Contracted Hours</BootstrapForm.Label>
+                    <BootstrapForm.Control
+                      type="number"
+                      value={contractHours}
+                      onChange={(e) => handleContractHoursChange(e.target.value)}
+                      placeholder="Enter contract hours"
+                      className="py-3 px-3 border-1"
+                      style={{ 
+                        borderColor: '#ddd',
+                        borderRadius: '10px',
+                        backgroundColor: '#fdfdfd'
+                      }}
+                    />
+                  </BootstrapForm.Group>
 
-                {/* Company Selector */}
-                <BootstrapForm.Group className="mb-4">
-                  <BootstrapForm.Label className="fw-medium text-muted">Company</BootstrapForm.Label>
-                  <BootstrapForm.Select
-                    value={company}
-                    onChange={(e) => handleCompanyChange(e.target.value)}
-                    className="py-3 px-3 border-1"
-                    style={{ 
-                      borderColor: '#ddd',
-                      borderRadius: '10px',
-                      backgroundColor: '#fdfdfd'
-                    }}
-                  >
-                    <option value="My Company">My Company</option>
-                    <option value="Other Company">Other Company</option>
-                  </BootstrapForm.Select>
-                </BootstrapForm.Group>
-                
-                {/* Contract Type */}
-                <BootstrapForm.Group className="mb-4">
-                  <BootstrapForm.Label className="fw-medium text-muted">Contract Type</BootstrapForm.Label>
-                  <BootstrapForm.Select
-                    value={contractType}
-                    onChange={(e) => handleContractTypeChange(e.target.value)}
-                    className="py-3 px-3 border-1"
-                    style={{ 
-                      borderColor: '#ddd',
-                      borderRadius: '10px',
-                      backgroundColor: '#fdfdfd'
-                    }}
-                  >
-                    <option value="">Select Contract Type</option>
-                    <option value="Contract">Contract</option>
-                    <option value="Bank">Bank</option>
-                  </BootstrapForm.Select>
-                </BootstrapForm.Group>
+                  {/* Month Selector */}
+                  <BootstrapForm.Group className="mb-4">
+                    <BootstrapForm.Label className="fw-medium text-muted">Month</BootstrapForm.Label>
+                    <BootstrapForm.Select
+                      value={selectedMonth}
+                      onChange={(e) => handleMonthYearChange(Number(e.target.value), selectedYear)}
+                      className="py-3 px-3 border-1"
+                      style={{ 
+                        borderColor: '#ddd',
+                        borderRadius: '10px',
+                        backgroundColor: '#fdfdfd'
+                      }}
+                    >
+                      {Array.from({ length: 12 }, (_, index) => (
+                        <option key={index} value={index}>
+                          {new Date(0, index).toLocaleString("default", { month: "long" })}
+                        </option>
+                      ))}
+                    </BootstrapForm.Select>
+                  </BootstrapForm.Group>
 
-                {/* Contract Hours */}
-                <BootstrapForm.Group className="mb-4">
-                  <BootstrapForm.Label className="fw-medium text-muted">Contracted Hours</BootstrapForm.Label>
-                  <BootstrapForm.Control
-                    type="number"
-                    value={contractHours}
-                    onChange={(e) => handleContractHoursChange(e.target.value)}
-                    placeholder="Enter contract hours"
-                    className="py-3 px-3 border-1"
-                    style={{ 
-                      borderColor: '#ddd',
-                      borderRadius: '10px',
-                      backgroundColor: '#fdfdfd'
-                    }}
-                  />
-                </BootstrapForm.Group>
+                  {/* Year Selector */}
+                  <BootstrapForm.Group className="mb-4">
+                    <BootstrapForm.Label className="fw-medium text-muted">Year</BootstrapForm.Label>
+                    <BootstrapForm.Control
+                      type="number"
+                      value={selectedYear}
+                      onChange={(e) => handleMonthYearChange(selectedMonth, Number(e.target.value))}
+                      className="py-3 px-3 border-1"
+                      style={{ 
+                        borderColor: '#ddd',
+                        borderRadius: '10px',
+                        backgroundColor: '#fdfdfd'
+                      }}
+                    />
+                  </BootstrapForm.Group>
 
-                {/* Month Selector */}
-                <BootstrapForm.Group className="mb-4">
-                  <BootstrapForm.Label className="fw-medium text-muted">Month</BootstrapForm.Label>
-                  <BootstrapForm.Select
-                    value={selectedMonth}
-                    onChange={(e) => handleMonthYearChange(Number(e.target.value), selectedYear)}
-                    className="py-3 px-3 border-1"
-                    style={{ 
-                      borderColor: '#ddd',
-                      borderRadius: '10px',
-                      backgroundColor: '#fdfdfd'
-                    }}
-                  >
-                    {Array.from({ length: 12 }, (_, index) => (
-                      <option key={index} value={index}>
-                        {new Date(0, index).toLocaleString("default", { month: "long" })}
-                      </option>
-                    ))}
-                  </BootstrapForm.Select>
-                </BootstrapForm.Group>
-
-                {/* Year Selector */}
-                <BootstrapForm.Group className="mb-4">
-                  <BootstrapForm.Label className="fw-medium text-muted">Year</BootstrapForm.Label>
-                  <BootstrapForm.Control
-                    type="number"
-                    value={selectedYear}
-                    onChange={(e) => handleMonthYearChange(selectedMonth, Number(e.target.value))}
-                    className="py-3 px-3 border-1"
-                    style={{ 
-                      borderColor: '#ddd',
-                      borderRadius: '10px',
-                      backgroundColor: '#fdfdfd'
-                    }}
-                  />
-                </BootstrapForm.Group>
-
-                {/* Hourly Rate */}
-                <BootstrapForm.Group>
-                  <BootstrapForm.Label className="fw-medium text-muted">Hourly Rate (£)</BootstrapForm.Label>
-                  <BootstrapForm.Control
-                    type="number"
-                    value={hourlyRate}
-                    onChange={(e) => setHourlyRate(Number(e.target.value))}
-                    min="1"
-                    className="py-3 px-3 border-1"
-                    style={{ 
-                      borderColor: '#ddd',
-                      borderRadius: '10px',
-                      backgroundColor: '#fdfdfd'
-                    }}
-                  />
-                </BootstrapForm.Group>
-              </Card.Body>
-            </Card>
-          </Col>
+                  {/* Hourly Rate */}
+                  <BootstrapForm.Group>
+                    <BootstrapForm.Label className="fw-medium text-muted">Hourly Rate (£)</BootstrapForm.Label>
+                    <BootstrapForm.Control
+                      type="number"
+                      value={hourlyRate}
+                      onChange={(e) => setHourlyRate(Number(e.target.value))}
+                      min="1"
+                      className="py-3 px-3 border-1"
+                      style={{ 
+                        borderColor: '#ddd',
+                        borderRadius: '10px',
+                        backgroundColor: '#fdfdfd'
+                      }}
+                    />
+                  </BootstrapForm.Group>
+                  
+                </Card.Body>
+              </Card>
+            </Col>
 
           {/* Right Panel - Calendar Grid */}
           <Col lg={8}>
@@ -885,33 +859,36 @@ const Form = () => {
                   ))}
                 </div> */}
         
-                <div
-                  className="calendar-header d-grid mb-3"
-                  style={{
-                    gridTemplateColumns: "repeat(7, 1fr)",
-                    textAlign: "center",
-                    fontWeight: "600",
-                    gap: "8px"
-                  }}
-                >
-                  {daysOfWeek.map((day, index) => {
-                    const isWeekend = day === "Saturday" || day === "Sunday";
-                    return (
-                      <div
-                        key={index}
-                        className="py-2 rounded-3"
-                        style={{
-                          backgroundColor: isWeekend ? '#e9f7f9' : '#dde7ff',
-                          color: isWeekend ? '#006D7D' : '#5E7CE2',
-                          fontSize: "0.9rem",
-                          border: `2px solid ${isWeekend ? '#006D7D' : '#5E7CE2'}`
-                        }}
-                      >
-                        {day.substring(0, 3)}
-                      </div>
-                    );
-                  })}
-                </div>
+                {/* Weekday Header */}
+                  <div
+                      className="calendar-header d-grid mb-4"
+                      style={{
+                          gridTemplateColumns: "repeat(7, 1fr)",
+                          textAlign: "center",
+                          fontWeight: "600",
+                          gap: "8px"
+                      }}
+                  >
+                      {daysOfWeek.map((day, index) => {
+                          const isWeekend = day === "Saturday" || day === "Sunday";
+                          return (
+                              <div
+                                  key={index}
+                                  className="py-2 rounded-3"
+                                  style={{
+                                      background: isWeekend 
+                                          ? 'linear-gradient(135deg, #94a3b8, #64748b)' 
+                                          : 'linear-gradient(135deg, #006D7D, #5E7CE2)',
+                                      color: 'white',
+                                      fontSize: "0.85rem",
+                                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                                  }}
+                              >
+                                  {day.substring(0, 3)}
+                              </div>
+                          );
+                      })}
+                  </div>
 
                 {/* Days Grid */}
                 <div
@@ -928,7 +905,7 @@ const Form = () => {
                       <div
                         key={`empty-${idx}`}
                         className="calendar-day"
-                        style={{ height: "100px", backgroundColor: "transparent" }}
+                        style={{ height: "80px", backgroundColor: "transparent" }}
                       />
                     ))}
 
@@ -938,98 +915,60 @@ const Form = () => {
                     return (
                       <div
                         key={index}
-                        className={`calendar-day p-2 rounded-3 text-center d-flex flex-column justify-content-between ${
-                          isComplete ? "border-success" : "bg-light"
-                        }`}
+                        className={`calendar-day p-1 rounded-3 d-flex flex-column justify-content-between ${
+                            isComplete ? "border-success" : ""
+                        } ${day.weekday === "Saturday" || day.weekday === "Sunday" ? "weekend" : ""}`}
                         style={{
-                          height: "100px",
-                          border: isComplete ? "2px solid #28a745" : "1px solid #eaeaea",
-                          transition: 'all 0.3s ease',
-                          cursor: 'pointer'
+                            minHeight: "30px",
+                            transition: 'all 0.3s ease',
                         }}
                         onMouseEnter={(e) => {
-                          if (!isComplete) e.currentTarget.style.backgroundColor = '#f8f9fa';
+                            e.currentTarget.style.transform = 'translateY(-2px)';
                         }}
                         onMouseLeave={(e) => {
-                          if (!isComplete) e.currentTarget.style.backgroundColor = '';
+                            e.currentTarget.style.transform = 'none';
                         }}
-                      >
-                        <div className="d-flex justify-content-between align-items-start">
-                          <span className="fw-bold" style={{ color: '#006D7D' }}>
-                            {day.day}
-                          </span>
-                          {day.timeDifference && (
-                            <span 
-                              className="badge rounded-pill fw-normal"
-                              style={{ 
-                                backgroundColor: '#e9f7f9', 
-                                color: '#006D7D',
-                                fontSize: '0.75rem'
-                              }}
-                            >
-                              {day.timeDifference}h
-                            </span>
-                          )}
+                    >
+                        {/* Top section - Day number and hours badge */}
+                        <div className="d-flex justify-content-between align-items-start flex-shrink-0">
+                            <div className="day-number fw-bold">
+                                {day.day}
+                            </div>
+                            {day.timeDifference && (
+                                <div 
+                                    className="hours-badge badge rounded-pill fw-normal"
+                                >
+                                    {parseFloat(day.timeDifference).toFixed(1)}h
+                                </div>
+                            )}
                         </div>
                         
-                        <div className="d-flex flex-column">
-                          <BootstrapForm.Control
-                            type="text"
-                            placeholder="Start"
-                            maxLength="5"
-                            inputMode="numeric"
-                            value={day.timeStart}
-                            onChange={(e) => formatTimeInput(e.target.value, index, "timeStart")}
-                            onDoubleClick={() => handleInputChange(index, "timeStart", "")}
-                            className="mb-1 time-input border-0 p-1 text-center"
-                            style={{ 
-                              backgroundColor: 'transparent',
-                              fontSize: '0.85rem'
-                            }}
-                          />
-                          <BootstrapForm.Control
-                            type="text"
-                            placeholder="End"
-                            maxLength="5"
-                            inputMode="numeric"
-                            value={day.timeEnd}
-                            onChange={(e) => formatTimeInput(e.target.value, index, "timeEnd")}
-                            onDoubleClick={() => handleInputChange(index, "timeEnd", "")}
-                            className="time-input border-0 p-1 text-center"
-                            style={{ 
-                              backgroundColor: 'transparent',
-                              fontSize: '0.85rem'
-                            }}
-                          />
+                        {/* Time inputs section */}
+                        <div className="d-flex flex-column justify-content-end flex-grow-1 gap-1">
+                            <BootstrapForm.Control
+                                type="text"
+                                placeholder="00:00"
+                                maxLength="5"
+                                inputMode="numeric"
+                                value={day.timeStart}
+                                onChange={(e) => formatTimeInput(e.target.value, index, "timeStart")}
+                                onDoubleClick={() => handleInputChange(index, "timeStart", "")}
+                                className="time-input"
+                                aria-label={`Start time for day ${day.day}`}
+                            />
+                            <BootstrapForm.Control
+                                type="text"
+                                placeholder="00:00"
+                                maxLength="5"
+                                inputMode="numeric"
+                                value={day.timeEnd}
+                                onChange={(e) => formatTimeInput(e.target.value, index, "timeEnd")}
+                                onDoubleClick={() => handleInputChange(index, "timeEnd", "")}
+                                className="time-input"
+                                aria-label={`End time for day ${day.day}`}
+                            />
                         </div>
-                        {/* mobile time input fix for iOS and Andriod */}
-                        <div className="d-flex flex-column">
-                          <input
-                            type="time"
-                            placeholder="Start"
-                            value={day.timeStart}
-                            onChange={(e) => handleInputChange(index, "timeStart", e.target.value)}
-                            className="mb-1 time-input border-0 p-1 text-center w-100"
-                            style={{ 
-                              backgroundColor: 'transparent',
-                              fontSize: '0.85rem',
-                              minHeight: '28px'
-                            }}
-                          />
-                          <input
-                            type="time"
-                            placeholder="End"
-                            value={day.timeEnd}
-                            onChange={(e) => handleInputChange(index, "timeEnd", e.target.value)}
-                            className="time-input border-0 p-1 text-center w-100"
-                            style={{ 
-                              backgroundColor: 'transparent',
-                              fontSize: '0.85rem',
-                              minHeight: '28px'
-                            }}
-                          />
-                        </div>
-                      </div>
+                    </div>
                     );
                   })}
                 </div>
