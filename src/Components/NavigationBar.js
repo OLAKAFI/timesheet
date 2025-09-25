@@ -103,25 +103,26 @@ const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
                 aria-label="Sign out"
               >
                     <Col md="auto" className="mt-3 mt-md-0">
-                      <Button 
-                        variant="light" 
+                      <Button variant="light" 
                         onClick={handleSignOut}
-                        className="d-flex align-items-center fw-bold"
                         style={{
-                          // borderRadius: '12px',
-                          padding: '12px 24px',
-                          color: 'rgba(216, 59, 59, 0.8)',
-                          // transition: 'all 0.3s ease'
+                         borderRadius: '12px',
+                         padding: '12px 24px',
+                         color: '#e4dcdaff',
+                         transition: 'all 0.3s ease'
                         }}
-                        // onMouseEnter={(e) => {
-                        //   e.currentTarget.style.backgroundColor = '#f0f8ff';
-                        //   e.currentTarget.style.transform = 'translateY(-2px)';
-                        // }}
-                        // onMouseLeave={(e) => {
-                        //   e.currentTarget.style.backgroundColor = 'white';
-                        //   e.currentTarget.style.transform = 'none';
-                        // }}
+                      
+                        onMouseEnter={(e) => {
+                         e.currentTarget.style.backgroundColor = '#d9422eff';
+                         e.currentTarget.style.transform = 'translateY(-2px)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'white';
+                          e.currentTarget.style.transform = 'none';
+                        }}
+                        className="fw-bold"
                       >
+                                               
                         <FaSignOutAlt className="me-2" />
                         Sign Out
                       </Button>

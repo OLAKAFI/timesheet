@@ -28,7 +28,10 @@ const Form = () => {
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [contractHours, setContractHours] = useState();
-    const [contractType, setContractType] = useState("");
+    const [contractType, setContractType] = useState("Contract");
+    
+    // Add new state for company
+    const [company, setCompany] = useState("My Company");
     const [days, setDays] = useState([]);
     const [hourlyRate, setHourlyRate] = useState(12.60);
     const [carryForward, setCarryForward] = useState(0); // Carry forward hours for overtime or time owed
@@ -40,6 +43,14 @@ const Form = () => {
   
   
     const [authenticated, setAuthenticated] = useState(true); // Declare authenticated state
+
+    // Determine if we should show detailed pay items
+    const showDetailedPay = contractType === "Contract" && company === "My Company";
+
+    
+    // Determine what to show in Hours Summary
+    const showExpectedHours = contractType !== "Bank";
+    const showOvertime = contractType !== "Bank";
   
   
     // persistence solution
@@ -47,37 +58,84 @@ const Form = () => {
   
   
     const navigate = useNavigate();
+
+    // Extra insurance to scroll to top
+    useEffect(() => {
+      window.scrollTo(0, 0);
+    }, []);
   
   
   
     // Initilized Data Copy
-    const initializeData = async () => {
-      console.log("Initializing data for:", selectedMonth + 1, selectedYear);
+    // const initializeData = async () => {
+    //   console.log("Initializing data for:", selectedMonth + 1, selectedYear);
     
-      if (!user) {
-        console.warn("No authenticated user. Skipping initialization.");
-        return;
-      }
+    //   if (!user) {
+    //     console.warn("No authenticated user. Skipping initialization.");
+    //     return;
+    //   }
     
-      setIsInitializing(true); // Begin initialization process
+    //   setIsInitializing(true); // Begin initialization process
     
-      // Attempt to load Firestore data
-      const firestoreData = await loadFromFirestore(selectedMonth, selectedYear);
+    //   // Attempt to load Firestore data
+    //   const firestoreData = await loadFromFirestore(selectedMonth, selectedYear);
   
-      if (firestoreData) {
-        console.log("Firestore data loaded successfully:", firestoreData);
-        // If Firestore data exists, update the state with the loaded data
-        setDays(firestoreData.days || []);
-        setCarryForward(firestoreData.carryForward || 0);
-      } else {
-        console.log("No Firestore data found. Generating empty days.");
-        // If no Firestore data exists, generate empty days
-        generateDays(selectedMonth, selectedYear);
-      }
+    //   if (firestoreData) {
+    //     console.log("Firestore data loaded successfully:", firestoreData);
+    //     // If Firestore data exists, update the state with the loaded data
+    //     setDays(firestoreData.days || []);
+    //     setCarryForward(firestoreData.carryForward || 0);
+    //   } else {
+    //     console.log("No Firestore data found. Generating empty days.");
+    //     // If no Firestore data exists, generate empty days
+    //     generateDays(selectedMonth, selectedYear);
+    //   }
   
-      setIsInitializing(false); // Mark initialization as complete
-    };
-    
+    //   setIsInitializing(false); // Mark initialization as complete
+    // };
+
+      // Modified initializeData to load contract hours
+      const initializeData = async () => {
+        console.log("Initializing data for:", selectedMonth + 1, selectedYear);
+      
+        if (!user) {
+          console.warn("No authenticated user. Skipping initialization.");
+          return;
+        }
+      
+        setIsInitializing(true);
+      
+        // Attempt to load Firestore data
+        const firestoreData = await loadFromFirestore(selectedMonth, selectedYear);
+        const userDocRef = doc(db, "userInputs", user.uid);
+
+         try {
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            const savedData = userDoc.data();
+            // Load contract hours if they exist
+            if (savedData.contractHours !== undefined) {
+              setContractHours(savedData.contractHours);
+            }
+            // Load company if it exists
+            if (savedData.company) {
+              setCompany(savedData.company);
+            }
+          }
+        } catch (error) {
+          console.error("Error loading data:", error);
+        }
+
+        if (firestoreData) {
+          setDays(firestoreData.days || []);
+          setCarryForward(firestoreData.carryForward || 0);
+        } else {
+          generateDays(selectedMonth, selectedYear);
+        }
+
+        setIsInitializing(false);
+      };
+        
   
   
     // LoadFromFirestore logic
@@ -156,25 +214,57 @@ const Form = () => {
   
     
     // save to firebase
-    const saveToFirestore = async () => {
-      if (!user || isInitializing) {
-        console.warn("No authenticated user. Cannot save data.");
-        return;
-      }
+    // const saveToFirestore = async () => {
+    //   if (!user || isInitializing) {
+    //     console.warn("No authenticated user. Cannot save data.");
+    //     return;
+    //   }
     
-      const key = `user-data-${selectedYear}-${selectedMonth + 1}`;
-      const userDocRef = doc(db, "userInputs", user.uid);
-      const updatedData = {
-        [key]: { days, carryForward },
+    //   const key = `user-data-${selectedYear}-${selectedMonth + 1}`;
+    //   const userDocRef = doc(db, "userInputs", user.uid);
+    //   const updatedData = {
+    //     [key]: { days, carryForward },
+    //   };
+    
+    //   try {
+    //     await setDoc(userDocRef, updatedData, { merge: true });
+    //     console.log("Data successfully updated in Firestore:", updatedData);
+    //   } catch (error) {
+    //     console.error("Error saving data to Firestore:", error);
+    //   }
+    // };
+
+      // Modified saveToFirestore to include contract hours
+      const saveToFirestore = async () => {
+        if (!user || isInitializing) {
+          console.warn("No authenticated user. Cannot save data.");
+          return;
+        }
+      
+        const key = `user-data-${selectedYear}-${selectedMonth + 1}`;
+        const userDocRef = doc(db, "userInputs", user.uid);
+        const updatedData = {
+          [key]: { days, carryForward }, company, // Add company to saved data
+          contractHours, // Add contract hours to saved data
+        };
+      
+        try {
+          await setDoc(userDocRef, updatedData, { merge: true });
+          console.log("Data successfully updated in Firestore:", updatedData);
+        } catch (error) {
+          console.error("Error saving data to Firestore:", error);
+        }
       };
-    
-      try {
-        await setDoc(userDocRef, updatedData, { merge: true });
-        console.log("Data successfully updated in Firestore:", updatedData);
-      } catch (error) {
-        console.error("Error saving data to Firestore:", error);
+
+
+    // basis to remove
+
+    // Add this useEffect to save contract hours when changed
+    useEffect(() => {
+      if (user && contractHours !== undefined) {
+        saveToFirestore();
       }
-    };
+    }, [contractHours]);
   
     // Initialize data when user or month/year changes
     useEffect(() => {
@@ -495,12 +585,29 @@ const Form = () => {
     }, [selectedMonth, selectedYear]);
   
   
-    // const grossPay = (parseFloat(monthlyPay) + (hourlyRate * previousCarryForward)).toFixed(2);
-    const grossPay = previousCarryForward > 0
+      // Create a function for calculating gross pay
+    const calculateGrossPay = () => {
+      // For "Other Company" or "Bank" contract type
+      if (company === "Other Company" || 
+          (company === "My Company" && contractType === "Bank")) {
+        return (totalHours * hourlyRate).toFixed(2);
+      }
+      
+      // For "My Company" with "Contract" type
+      return previousCarryForward > 0
     ? (parseFloat(monthlyPay) + (hourlyRate * previousCarryForward)).toFixed(2)
     : parseFloat(monthlyPay).toFixed(2);
+    };
+
+    // Calculate gross pay using the function
+    const grossPay = calculateGrossPay();
+
+    // const grossPay = (parseFloat(monthlyPay) + (hourlyRate * previousCarryForward)).toFixed(2);
+    // const grossPay = previousCarryForward > 0
+    // ? (parseFloat(monthlyPay) + (hourlyRate * previousCarryForward)).toFixed(2)
+    // : parseFloat(monthlyPay).toFixed(2);
   
-    console.log(`Gross Pay: $${grossPay}`);
+    // console.log(`Gross Pay: $${grossPay}`);
   
     // Format time input
     const formatTimeInput = (value, index, field) => {
@@ -519,43 +626,9 @@ const Form = () => {
 
   return (
     <div className="min-vh-100 d-flex justify-content-center align-items-center py-5" style={{backgroundColor: '#f8f9fa'}}>
-      <Container className="bg-white p-4 p-md-5 rounded-4 shadow-lg my-5" style={{ maxWidth: '1200px' }}>
+      <Container className="bg-white p-2 p-md-5 rounded-4 shadow-lg my-5" style={{ maxWidth: '1200px' }}>
         {/* Header Section */}
-        {/* <Row className="mb-4 align-items-center">
-          <Col className="text-center text-md-start">
-            <h1 className="display-5 fw-bold mb-3" style={{ color: '#006D7D', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>
-              <FaCalculator className="me-2" />
-              SHIFTROOM TIMESHEET
-            </h1>
-            <p className="text-muted mb-0">
-              Track your working hours and calculate your earnings
-            </p>
-          </Col>
-          <Col md="auto" className="mt-3 mt-md-0">
-            <Button 
-              variant="outline-danger" 
-              className="d-flex align-items-center fw-medium"
-              onClick={handleSignOut}
-              style={{
-                borderRadius: '10px',
-                padding: '10px 20px',
-                borderWidth: '2px',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#D32F2F';
-                e.currentTarget.style.color = 'white';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = '#D32F2F';
-              }}
-            >
-              <FaSignOutAlt className="me-2" />
-              Sign Out
-            </Button>
-          </Col>
-        </Row> */}
+ 
         <div className="rounded-4 p-4 mb-5 text-white" 
                      style={{
                        background: 'linear-gradient(90deg, #006D7D 0%, #5E7CE2 100%)',
@@ -565,13 +638,14 @@ const Form = () => {
                     <Col className="text-center text-md-start">
                       <h1 className="display-5 fw-bold mb-3">
                         <FaCalculator className="me-2" />
-                        SHIFTROOM TIMESHEET
+                        SHIFTROOM EXPLORER
                       </h1>
                       <p className="mb-0 fs-5 opacity-90">
                         Track your working hours and calculate your earnings
                       </p>
                     </Col>
-                    <Col md="auto" className="mt-3 mt-md-0">
+                    {/* SignOut Button Removed */}
+                    {/* <Col md="auto" className="mt-3 mt-md-0">
                       <Button 
                         variant="light" 
                         onClick={handleSignOut}
@@ -594,7 +668,7 @@ const Form = () => {
                         <FaSignOutAlt className="me-2" />
                         Sign Out
                       </Button>
-                    </Col>
+                    </Col> */}
                   </Row>
                 </div>
 
@@ -608,6 +682,24 @@ const Form = () => {
                   <FaCalendarAlt className="me-2" />
                   Contract Details
                 </h3>
+
+                {/* Company Selector */}
+                <BootstrapForm.Group className="mb-4">
+                  <BootstrapForm.Label className="fw-medium text-muted">Company</BootstrapForm.Label>
+                  <BootstrapForm.Select
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                    className="py-3 px-3 border-1"
+                    style={{ 
+                      borderColor: '#ddd',
+                      borderRadius: '10px',
+                      backgroundColor: '#fdfdfd'
+                    }}
+                  >
+                    <option value="My Company">My Company</option>
+                    <option value="Other Company">Other Company</option>
+                  </BootstrapForm.Select>
+                </BootstrapForm.Group>
                 
                 {/* Contract Type */}
                 <BootstrapForm.Group className="mb-4">
@@ -853,6 +945,33 @@ const Form = () => {
                             }}
                           />
                         </div>
+                        {/* mobile time input fix for iOS and Andriod */}
+                        <div className="d-flex flex-column">
+                          <input
+                            type="time"
+                            placeholder="Start"
+                            value={day.timeStart}
+                            onChange={(e) => handleInputChange(index, "timeStart", e.target.value)}
+                            className="mb-1 time-input border-0 p-1 text-center w-100"
+                            style={{ 
+                              backgroundColor: 'transparent',
+                              fontSize: '0.85rem',
+                              minHeight: '28px'
+                            }}
+                          />
+                          <input
+                            type="time"
+                            placeholder="End"
+                            value={day.timeEnd}
+                            onChange={(e) => handleInputChange(index, "timeEnd", e.target.value)}
+                            className="time-input border-0 p-1 text-center w-100"
+                            style={{ 
+                              backgroundColor: 'transparent',
+                              fontSize: '0.85rem',
+                              minHeight: '28px'
+                            }}
+                          />
+                        </div>
                       </div>
                     );
                   })}
@@ -874,24 +993,35 @@ const Form = () => {
                       <span className="fw-medium">{totalDaysWithInput}</span>
                     </div>
                     
-                    <div className="d-flex justify-content-between mb-3 pb-2 border-bottom">
-                      <span className="text-muted">Expected Hours:</span>
-                      <span className="fw-medium">{expectedHours} hrs</span>
-                    </div>
+                    {/* Conditionally show Expected Hours */}
+                    {showExpectedHours && (
+                      <div className="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                        <span className="text-muted">Expected Hours:</span>
+                        <span className="fw-medium">{expectedHours} hrs</span>
+                      </div>
+                    )}
                     
                     <div className="d-flex justify-content-between mb-3 pb-2 border-bottom">
                       <span className="text-muted">Total Hours:</span>
-                      <span className="fw-medium">{totalHours} hrs</span>
+                      <span className="fw-medium">
+                        {Number.isInteger(totalHours) 
+                          ? totalHours 
+                          : totalHours.toFixed(2)
+                        } hrs
+                      </span>
                     </div>
                     
-                    <div className="d-flex justify-content-between">
-                      <span className="text-muted">
-                        {totalHours - expectedHours > 0 ? "Overtime:" : "Time Owed:"}
-                      </span>
-                      <span className={`fw-bold ${totalHours - expectedHours > 0 ? 'text-success' : 'text-danger'}`}>
-                        {Math.abs(totalHours - expectedHours).toFixed(2)} hrs
-                      </span>
-                    </div>
+                    {/* Conditionally show Overtime/Time Owed */}
+                    {showOvertime && (
+                      <div className="d-flex justify-content-between">
+                        <span className="text-muted">
+                          {totalHours - expectedHours > 0 ? "Overtime:" : "Time Owed:"}
+                        </span>
+                        <span className={`fw-bold ${totalHours - expectedHours > 0 ? 'text-success' : 'text-danger'}`}>
+                          {Math.abs(totalHours - expectedHours).toFixed(2)} hrs
+                        </span>
+                      </div>
+                    )}
                   </Card.Body>
                 </Card>
               </Col>
@@ -904,24 +1034,29 @@ const Form = () => {
                       Pay Summary
                     </h3>
                     
-                    <div className="d-flex justify-content-between mb-3 pb-2 border-bottom">
-                      <span className="text-muted">Monthly Basic:</span>
-                      <span className="fw-medium">£{monthlyPay}</span>
-                    </div>
-                    
-                    <div className="d-flex justify-content-between mb-3 pb-2 border-bottom">
-                      <span className="text-muted">Annual Basic:</span>
-                      <span className="fw-medium">£{annualPay}</span>
-                    </div>
-                    
-                    <div className="d-flex justify-content-between mb-3 pb-2 border-bottom">
-                      <span className="text-muted">
-                        {previousCarryForward > 0 ? "Previous Overtime:" : "Previous Time Owed:"}
-                      </span>
-                      <span className={`fw-medium ${previousCarryForward > 0 ? 'text-success' : 'text-danger'}`}>
-                        {Math.abs(previousCarryForward).toFixed(2)} hrs
-                      </span>
-                    </div>
+                    {/* Conditionally render detailed pay items */}
+                    {showDetailedPay && (
+                      <>
+                        <div className="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                          <span className="text-muted">Monthly Basic:</span>
+                          <span className="fw-medium">£{monthlyPay}</span>
+                        </div>
+                        
+                        <div className="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                          <span className="text-muted">Annual Basic:</span>
+                          <span className="fw-medium">£{annualPay}</span>
+                        </div>
+                        
+                        <div className="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                          <span className="text-muted">
+                            {previousCarryForward > 0 ? "Previous Overtime:" : "Previous Time Owed:"}
+                          </span>
+                          <span className={`fw-medium ${previousCarryForward > 0 ? 'text-success' : 'text-danger'}`}>
+                            {Math.abs(previousCarryForward).toFixed(2)} hrs
+                          </span>
+                        </div>
+                      </>
+                    )}
                     
                     <div className="d-flex justify-content-between">
                       <span className="text-muted">Gross Pay:</span>

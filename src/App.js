@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import './App.css';
 import Form from './Pages/Form';
 import { useState } from 'react';
-import SignInSignUp from './Pages/SignInSignUp';
+import SignInSignUp from './Pages/SignInSignUpBackUp';
 import Dashboard from "./Pages/Dashboard";
 import NavigationBar from "./Components/NavigationBar";
 import Footer from "./Components/Footer";
@@ -17,6 +17,8 @@ import StaffSchedule from "./Pages/StaffSchedule";
 import ContactPage from "./Pages/ContactPage";
 import FeaturesPage from "./Pages/FeaturesPage";
 import ComingSoon from "./Pages/ComingSoon";
+import MetricsPage from "./Pages/MetricsPage";
+import LandingPage from "./Pages/LandingPage";
 
 
 
@@ -40,7 +42,9 @@ function App() {
       <NavigationBar isAuthenticated={isAuthenticated} setAuthenticated={setAuthenticated} />
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<SignInSignUp setUsername={setUsername}  />} /> 
+          <Route path="/" element={<LandingPage/>} />
+          <Route path="/signin" element={<SignInSignUp setUsername={setUsername}  />} />
+          <Route path="/dashboard/metrics" element={<MetricsPage />} />
           <Route path="/dashboard" element={<Dashboard username={username} />} /> 
           <Route path="/timesheet" element={<Form />} />
           <Route path="/contact" element={<ContactPage />} />   

@@ -1,30 +1,60 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Button, Card } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../AuthProvider";
+import { FaArrowRight, FaClock, FaChartLine, FaCalendarAlt, FaMobile, FaRocket } from 'react-icons/fa';
+import '../style/landing.css';
 
 const Dashboard = ({ username }) => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   
+
   // Feature cards data
   const features = [
-    {
-      title: "Time Tracking",
-      description: "Log your work hours with precision",
-      icon: "⏱️"
-    },
-    {
-      title: "Salary Calculator",
-      description: "Estimate your earnings instantly",
-      icon: "💰"
-    },
-    {
-      title: "Shift Planning",
-      description: "Organize your work schedule ",
-      icon: "📅"
-    }
+      {
+        icon: <FaClock className="feature-icon" />,
+        title: "Smart Time Tracking",
+        description: "Automated time tracking with intelligent categorization and real-time insights",
+        gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        url: '/timesheet'
+      },
+      {
+        icon: <FaChartLine className="feature-icon" />,
+        title: "Advanced Analytics",
+        description: "Deep insights into your work patterns, productivity trends, and earnings optimization",
+        gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+        url: '/dashboard/metrics'
+      },
+      {
+        icon: <FaCalendarAlt className="feature-icon" />,
+        title: "Shift Planning",
+        description: "Intelligent scheduling that adapts to your preferences and maximizes efficiency",
+        gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+        url: '/timesheet'
+      },
+      {
+        icon: <FaMobile className="feature-icon" />,
+        title: "Mobile First",
+        description: "Seamless experience across all devices with offline capability and sync",
+        gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+        url: '/dashboard'
+      },
+      {
+        icon: <FaMobile className="feature-icon" />,
+        title: "Enterprise Security",
+        description: "Bank-level security with end-to-end encryption and privacy controls",
+        gradient: "linear-gradient(135deg, #70bafaff 0%, #40fee5ff 100%)",
+        url: '/dashboard'
+      },
+      {
+        icon: <FaRocket className="feature-icon" />,
+        title: "Instant Setup",
+        description: "Get started in minutes with intuitive onboarding and smart defaults",
+        gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        url: '/dashboard'
+      }
   ];
 
   // Track window width for responsive adjustments
@@ -83,11 +113,11 @@ const Dashboard = ({ username }) => {
               >
                 Track your hours, calculate earnings, and optimize your work schedule.
               </p>
-              <div className="d-flex justify-content-center justify-content-md-start">
+              <div className="d-flex justify-content-center justify-content-md-start ">
                 <Button
                   variant="light"
                   size={windowWidth < 768 ? "md" : "lg"}
-                  className="fw-semibold px-4 py-2 py-md-3"
+                  className="fw-bold px-4 py-2 py-md-3"
                   style={{ 
                     backgroundColor: 'white', 
                     color: '#006D7D',
@@ -96,8 +126,10 @@ const Dashboard = ({ username }) => {
                   }}
                   onClick={() => navigate("/timesheet")}
                 >
-                  Go to Timesheet →
+                  Go to Timesheet
+                  <FaArrowRight className="ms-3 ms-md-3" />
                 </Button>
+                
               </div>
             </Col>
             <Col xs={12} md={6} className="text-center mt-4 mt-md-0">
@@ -148,113 +180,40 @@ const Dashboard = ({ username }) => {
         </Container>
       </div>
 
+      
       {/* Features Section */}
-      <Container className="py-4 py-md-6 px-3">
-        <Row className="mb-4 mb-md-5">
-          <Col className="text-center">
-            <h2 
-              className="fw-bold mb-3"
-              style={{ 
-                color: '#006D7D', 
-                fontSize: windowWidth < 768 ? '1.6rem' : '2rem',
-                fontFamily: "'Segoe UI', 'Roboto', sans-serif" 
-              }}
-            >
-              Powerful Features
-            </h2>
-            <p 
-              className="text-muted mx-auto"
-              style={{ 
-                maxWidth: '600px', 
-                fontSize: windowWidth < 768 ? '0.95rem' : '1.1rem'
-              }}
-            >
-              Everything you need to manage your work hours and earnings
-            </p>
-          </Col>
-        </Row>
-        
-        <Row className="g-4 justify-content-center mx-0">
-          {features.map((feature, index) => (
-            <Col 
-              key={index} 
-              xs={12} 
-              sm={10}
-              md={8}
-              lg={4} 
-              className="d-flex justify-content-center px-0 px-sm-3"
-            >
-              <Card 
-                className="border-0 shadow-sm h-100 rounded-3 overflow-hidden w-100"
-                style={{ 
-                  transition: 'transform 0.3s ease',
-                  maxWidth: '380px'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
-              >
-                <Card.Body className="p-3 p-md-4 d-flex flex-column align-items-center text-center">
-                  <div 
-                    className="mb-3 d-flex align-items-center justify-content-center"
-                    style={{ 
-                      color: '#5E7CE2', 
-                      fontSize: windowWidth < 768 ? '2.5rem' : '3rem',
-                      width: windowWidth < 768 ? '70px' : '80px',
-                      height: windowWidth < 768 ? '70px' : '80px',
-                      backgroundColor: 'rgba(94, 124, 226, 0.1)',
-                      borderRadius: '50%'
-                    }}
-                  >
-                    {feature.icon}
-                  </div>
-                  <Card.Title 
-                    className="fw-semibold mb-3"
-                    style={{ 
-                      color: '#006D7D', 
-                      fontSize: windowWidth < 768 ? '1.2rem' : '1.4rem',
-                      fontFamily: "'Segoe UI', 'Roboto', sans-serif" 
-                    }}
-                  >
-                    {feature.title}
-                  </Card.Title>
-                  <Card.Text 
-                    className="mb-3 mb-md-4" 
-                    style={{ 
-                      color: '#5c5c5c',
-                      fontSize: windowWidth < 768 ? '0.9rem' : '1rem'
-                    }}
-                  >
-                    {feature.description}
-                  </Card.Text>
-                  <Button
-                    variant="outline-primary"
-                    className="mt-auto fw-medium align-self-center"
-                    style={{ 
-                      color: '#5E7CE2',
-                      borderColor: '#5E7CE2',
-                      borderRadius: '30px',
-                      padding: windowWidth < 768 ? '6px 16px' : '8px 20px',
-                      transition: 'all 0.3s ease',
-                      fontSize: windowWidth < 768 ? '0.9rem' : '1rem'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#5E7CE2';
-                      e.currentTarget.style.color = 'white';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.color = '#5E7CE2';
-                    }}
-                    onClick={() => navigate("/timesheet")}
-                  >
-                    Get started
-                  </Button>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </Container>
+      <section id="features" className="features-section">
+              <Container>
+                <Row className="text-center mb-5">
+                  <Col>
+                    <h2 className="section-title">Everything You Need in One Platform</h2>
+                    <p className="section-subtitle">Designed for professionals who value their time and earnings</p>
+                  </Col>
+                </Row>
+                <Row>
+                  {features.map((feature, index) => (
+                    
+                      <Col md={6} lg={4} key={index} className="mb-4">
+                        <Link to={feature.url} key={index} style={{ textDecoration: 'none' }}>
+                          <Card 
+                            className="feature-card h-100"
+                            style={{ background: feature.gradient }}
+                          >
+                            <Card.Body className="text-center text-white p-4">
+                              <div className="feature-icon-wrapper">
+                                {feature.icon}
+                              </div>
+                              <h5 className="mt-3 mb-3">{feature.title}</h5>
+                              <p className="opacity-90">{feature.description}</p>
+                            </Card.Body>
+                          </Card>
+                        </Link>
+                      </Col>
+                    
+                  ))}
+                </Row>
+              </Container>
+      </section>
 
       {/* CTA Section */}
       <div 
