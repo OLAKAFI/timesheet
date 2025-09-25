@@ -639,12 +639,7 @@ const Form = () => {
     // Calculate gross pay using the function
     const grossPay = calculateGrossPay();
 
-    // const grossPay = (parseFloat(monthlyPay) + (hourlyRate * previousCarryForward)).toFixed(2);
-    // const grossPay = previousCarryForward > 0
-    // ? (parseFloat(monthlyPay) + (hourlyRate * previousCarryForward)).toFixed(2)
-    // : parseFloat(monthlyPay).toFixed(2);
-  
-    // console.log(`Gross Pay: $${grossPay}`);
+
   
     // Format time input
     const formatTimeInput = (value, index, field) => {
@@ -834,30 +829,6 @@ const Form = () => {
                   Timesheet Calendar - {new Date(0, selectedMonth).toLocaleString("default", { month: "long" })} {selectedYear}
                 </h3>
                 
-                {/* Weekday Header */}
-                {/* <div
-                  className="calendar-header d-grid mb-3"
-                  style={{
-                    gridTemplateColumns: "repeat(7, 1fr)",
-                    textAlign: "center",
-                    fontWeight: "600",
-                    gap: "8px"
-                  }}
-                >
-                  {daysOfWeek.map((day, index) => (
-                    <div
-                      key={index}
-                      className="py-2 rounded-2"
-                      style={{
-                        backgroundColor: '#e9f7f9',
-                        color: '#006D7D',
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      {day.substring(0, 3)}
-                    </div>
-                  ))}
-                </div> */}
         
                 {/* Weekday Header */}
                   <div
