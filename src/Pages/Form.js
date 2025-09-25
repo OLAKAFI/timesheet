@@ -938,7 +938,7 @@ const Form = () => {
                                 <div 
                                     className="hours-badge badge rounded-pill fw-normal"
                                 >
-                                    {parseFloat(day.timeDifference).toFixed(1)}h
+                                    {parseFloat(day.timeDifference).toFixed(2)}h
                                 </div>
                             )}
                         </div>
