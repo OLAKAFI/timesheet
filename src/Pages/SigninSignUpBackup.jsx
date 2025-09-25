@@ -12,7 +12,7 @@ const provider = new GoogleAuthProvider();
 
 
 
-const SignInSignUp = ({ setUsername }) => {
+const SignInSignUpBackup = ({ setUsername }) => {
   const [isSignUp, setIsSignUp] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -59,6 +59,7 @@ const SignInSignUp = ({ setUsername }) => {
   };
 
   return (
+    // Sign in / Sign up page form
     <Container fluid className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
       <Row className="w-100">
         <Col md={6} lg={4} className="mx-auto">
@@ -133,4 +134,4 @@ const SignInSignUp = ({ setUsername }) => {
   );
 };
 
-export default SignInSignUp;
+export default SignInSignUpBackup;

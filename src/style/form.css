@@ -1,21 +1,21 @@
 body {
-    background-color: #f8f9fa; /* Light gray background */  
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
-  
+
 .day-box {
     padding: 15px;
     text-align: center;
     border: 1px solid #ccc;
     border-radius: 5px;
-    background-color: #f8d7da; /* Default light red */
-    transition: background-color 0.3s ease; 
+    background-color: #f8d7da;
+    transition: background-color 0.3s ease;
 }
 
-  
 .day-box.completed {
-    background-color: #d4edda; /* Light green for completed days */
+    background-color: #d4edda;
 }
-  
+
 .summary-box {
     background-color: #f8f9fa;
     padding: 20px;
@@ -23,81 +23,315 @@ body {
     border: 1px solid #ddd;
     text-align: left;
 }
-  
-
-
-
-
 
 .calendar-container {
-  overflow-x: auto; /* Prevent horizontal overflow */
+    overflow-x: auto;
 }
 
 .calendar-header {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
 }
 
 .weekday {
-  min-width: 40px;
-  flex: 1;
+    min-width: 40px;
+    flex: 1;
 }
 
+/* Modern Calendar Day Design */
 .calendar-day {
-  min-width: 40px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 8px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
 }
 
-
-
-/* Hide clock icon in Chrome, Edge, Safari */
-input[type="time"]::-webkit-calendar-picker-indicator {
-  display: none !important;
-  -webkit-appearance: none;
+.calendar-day::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #006D7D, #5E7CE2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
+.calendar-day:hover {
+    border-color: #5E7CE2;
+    box-shadow: 0 4px 20px rgba(94, 124, 226, 0.15);
+    transform: translateY(-2px);
+}
 
+.calendar-day:hover::before {
+    opacity: 1;
+}
+
+.calendar-day.border-success {
+    border: 2px solid #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.calendar-day.border-success::before {
+    background: linear-gradient(90deg, #10b981, #34d399);
+    opacity: 1;
+}
+
+/* Modern Time Inputs - Borderless Design */
+.time-input {
+    background-color: #f8fafc !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-size: 0.8rem !important;
+    padding: 6px 4px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    width: 100% !important;
+    text-align: center !important;
+    margin: 0 !important;
+    transition: all 0.2s ease !important;
+    color: #2d3748 !important;
+}
+
+.time-input:focus {
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 2px #006D7D, 0 2px 8px rgba(0, 109, 125, 0.1) !important;
+    outline: none !important;
+}
+
+.time-input:hover {
+    background-color: #f1f5f9 !important;
+}
+
+.time-input::placeholder {
+    color: #94a3b8 !important;
+    font-size: 0.75rem !important;
+}
+
+.time-input.mb-1 {
+    margin-bottom: 4px !important;
+}
+
+/* Enhanced Hours Badge */
+.hours-badge {
+    background: linear-gradient(135deg, #006D7D, #5E7CE2) !important;
+    color: white !important;
+    font-size: 0.7rem !important;
+    padding: 4px 8px !important;
+    border-radius: 20px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 8px rgba(0, 109, 125, 0.3);
+    position: relative;
+    bottom: -2px; /* Slightly lower position */
+    border: 2px solid white;
+}
+
+/* Improved Day Number */
+.day-number {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    background: linear-gradient(135deg, #006D7D, #5E7CE2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Calendar Grid Improvements */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+}
+
+/* Weekend Day Styling */
+.calendar-day.weekend {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.calendar-day.weekend .day-number {
+    background: linear-gradient(135deg, #94a3b8, #64748b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Header Styling */
+.calendar-header > div {
+    background: linear-gradient(135deg, #006D7D, #5E7CE2);
+    color: white;
+    font-weight: 600;
+    padding: 12px 8px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+/* Focus States for Accessibility */
+.calendar-day:focus-within {
+    box-shadow: 0 0 0 3px rgba(0, 109, 125, 0.1);
+}
+
+.time-input:focus-visible {
+    outline: 2px solid #006D7D;
+    outline-offset: 2px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .calendar-day {
+        border-width: 2px;
+    }
+    
+    .time-input {
+        border: 1px solid #2d3748 !important;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .calendar-day {
+        transition: none;
+    }
+    
+    .time-input {
+        transition: none;
+    }
+}
+
+/* Mobile Responsiveness */
 @media (max-width: 767px) {
     .calendar-header {
-      display: none !important; /* Hide weekdays row */
+        display: none !important;
     }
   
     .calendar-grid {
-      grid-template-columns: repeat(3, 1fr) !important; /* Switch to 3 columns */
-      gap: 10px;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 8px;
+    }
+    
+    .calendar-day {
+        min-height: 100px;
+        padding: 6px;
+    }
+    
+    .time-input {
+        height: 26px !important;
+        min-height: 26px !important;
+        font-size: 0.75rem !important;
+        padding: 4px 2px !important;
+    }
+    
+    .hours-badge {
+        font-size: 0.65rem !important;
+        padding: 3px 6px !important;
     }
 }
 
-
-/* Adjustments for screens smaller than tablets */
+/* Tablet Adjustments */
 @media (max-width: 768px) {
-
-
-  .calendar-day {
-    font-size: 0.8rem;
-  }
-
-  .time-input {
-    font-size: 0.8rem; /* Scale down input size */
-  }
+    .calendar-day {
+        min-height: 110px;
+    }
+    
+    .time-input {
+        height: 28px !important;
+        min-height: 28px !important;
+    }
 }
 
+/* Small Mobile Devices */
 @media (max-width: 576px) {
-  .calendar-grid {
-    grid-template-columns: repeat(2, 1fr); /* Switch to 2 columns */
-    gap: 5px;
-  }
+    .calendar-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
 
-  .calendar-day h6 {
-    font-size: 0.9rem;
-  }
-
-  .time-input {
-    font-size: 0.7rem; /* Further scale down input size */
-  }
+    .calendar-day {
+        min-height: 95px;
+    }
+    
+    .time-input {
+        font-size: 0.7rem !important;
+        height: 24px !important;
+        min-height: 24px !important;
+        padding: 3px 1px !important;
+    }
+    
+    .day-number {
+        font-size: 0.85rem;
+    }
 }
 
+/* Large Screens */
+@media (min-width: 992px) {
+    .calendar-day {
+        min-height: 130px;
+    }
+    
+    .time-input {
+        height: 30px !important;
+        min-height: 30px !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .hours-badge {
+        font-size: 0.75rem !important;
+        padding: 5px 10px !important;
+        bottom: -3px; /* Slightly more offset on larger screens */
+    }
+}
 
+/* Extra Large Screens */
+@media (min-width: 1200px) {
+    .calendar-day {
+        min-height: 140px;
+    }
+    
+    .time-input {
+        height: 32px !important;
+        min-height: 32px !important;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .calendar-day {
+        border: 1px solid #000 !important;
+        background: white !important;
+    }
+    
+    .time-input {
+        background: white !important;
+        border: 1px solid #000 !important;
+    }
+}
+
+/* Compact calendar day styling */
+.compact-calendar-day {
+    min-height: 80px !important; /* Reduced from 120px */
+}
+
+.compact-calendar-day .time-input {
+    height: 22px !important;
+    min-height: 22px !important;
+    font-size: 0.7rem !important;
+    padding: 2px 3px !important;
+}
+
+.compact-calendar-day .day-number {
+    font-size: 0.8rem;
+}
+
+.compact-calendar-day .hours-badge {
+    font-size: 0.6rem !important;
+    padding: 2px 5px !important;
+}
