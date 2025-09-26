@@ -126,7 +126,7 @@ const Dashboard = ({ username }) => {
                   }}
                   onClick={() => navigate("/timesheet")}
                 >
-                  Go to Timesheet
+                  Go to Shift Explorer
                   <FaArrowRight className="ms-3 ms-md-3" />
                 </Button>
                 

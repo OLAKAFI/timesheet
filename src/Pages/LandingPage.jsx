@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Button, Card } from "react-bootstrap";
-import { useNavigate} from "react-router-dom";
+import { Link, useNavigate} from "react-router-dom";
 // import { useAuth } from "../AuthProvider";
 import { FaArrowRight, FaPlay, FaChartLine, FaClock, FaCalendarAlt, FaMobile, FaRocket } from 'react-icons/fa';
 import '../style/landing.css';
@@ -87,8 +87,8 @@ const LandingPage = ({ username }) => {
             <Col md={4} className="d-none d-md-block">
               <div className="nav-links">
                 <a href="#features">Features</a>
-                <a href="#how-it-works">How it Works</a>
-                <a href="#testimonials">Testimonials</a>
+                <Link to="/contact">Contact Us</Link>
+                
               </div>
             </Col>
             <Col xs={6} md={4} className="text-end">
@@ -142,16 +142,16 @@ const LandingPage = ({ username }) => {
                   Watch Demo
                 </Button>
               </div>
-              <div className="hero-stats">
-                <div className="stat-item">
+              <div className=" hero-stats">
+                <div className=" d-none d-md-block stat-item">
                   <strong>10+</strong>
                   <span>Features</span>
                 </div>
-                <div className="stat-item">
+                <div className=" d-none d-md-block stat-item">
                   <strong>99.9%</strong>
                   <span>Uptime</span>
                 </div>
-                <div className="stat-item">
+                <div className=" d-none d-md-block stat-item">
                   <strong>24/7</strong>
                   <span>Support</span>
                 </div>

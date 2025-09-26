@@ -466,3 +466,62 @@
     transform: scale(0.95);
   }
 }
+
+
+
+
+/* Optional: Add custom responsive styles */
+@media (max-width: 767.98px) {
+  .sign-out-btn {
+    width: 100%;
+    max-width: 200px;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 768px) {
+  .sign-out-btn {
+    width: auto;
+  }
+}
+
+
+
+/* Add to your CSS file */
+.chart-card .recharts-pie-label-text {
+  font-size: 15px;
+  font-weight: 600;
+  fill: rgb(92, 46, 98);
+  text-shadow: 1px 1px 2px rgba(107, 94, 107, 0.5);
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  .chart-card .recharts-pie-label-text {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  
+  .chart-card .recharts-legend-wrapper {
+    bottom: -10px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .chart-card .recharts-pie-label-text {
+    font-size: 9px;
+  }
+  
+  .chart-card {
+    margin-bottom: 30px; /* Extra space for legend */
+  }
+}
+
+/* Ensure chart container doesn't overflow */
+.chart-card .recharts-wrapper {
+  overflow: visible !important;
+}
+
+.chart-card .recharts-surface {
+  overflow: visible !important;
+}

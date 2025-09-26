@@ -662,23 +662,27 @@ const Form = () => {
           {/* Header Section - Same as before */}
           <div className="dashboard-header rounded-4 p-3 p-md-4 mb-3 mb-md-4 text-white">
             <Row className="align-items-center">
-              <Col xs={6} md={8} className="text-center text-md-start">
-                <h1 className="h3 h1-md fw-bold mb-2 mb-md-3">
-                  <FaCalculator className="me-2" />
+              <Col xs={12} lg={8} className="text-center text-lg-start mb-3 mb-lg-0">
+                <h1 className="h4 h1-lg fw-bold mb-2 mb-lg-3">
+                  
                   SHIFTROOM EXPLORER
                 </h1>
-                <p className="mb-0 fs-5 opacity-90">
-                  Track your working hours and calculate your earnings
+                <p className="mb-0 fs-6 fs-lg-5 opacity-90">
+                  Track your working hours and your earnings
                 </p>
               </Col>
-              <Col xs={6} md={4} className="text-end ">
-                <Button variant="light" 
+              <Col xs={12} lg={4} className="text-center text-lg-end">
+                <Button 
+                  variant="light" 
                   onClick={() => navigate("/dashboard/metrics")}
+                  className="fw-bold responsive-btn"
                   style={{
                     borderRadius: '12px',
-                    padding: '12px 24px',
+                    padding: '8px 16px',
                     color: '#006D7D',
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.3s ease',
+                    width: 'auto',
+                    minWidth: '140px'
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = '#f0f8ff';
@@ -688,10 +692,9 @@ const Form = () => {
                     e.currentTarget.style.backgroundColor = 'white';
                     e.currentTarget.style.transform = 'none';
                   }}
-                  className="fw-bold"
                 >
-                  Get Insight
-                  <FaArrowRight className="ms-3 ms-md-3" />
+                  Get More Insight
+                  <FaArrowRight className="ms-2" />
                 </Button>
               </Col>
             </Row>

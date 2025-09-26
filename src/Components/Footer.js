@@ -184,7 +184,7 @@ const Footer = () => {
         <Container>
               <Row>
                 <Col lg={4} className="mb-4">
-                  <Link to="/dashboard" className="text-white text-decoration-none">
+                  <Link to="/" className="text-white text-decoration-none">
                     <div className="logo">  
                       <span>ShiftRoom</span>
                     </div>
