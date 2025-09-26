@@ -335,3 +335,32 @@ body {
     font-size: 0.6rem !important;
     padding: 2px 5px !important;
 }
+
+
+
+
+
+
+
+/* Add to your CSS file */
+.responsive-btn {
+  width: 100%;
+  max-width: 200px;
+}
+
+@media (min-width: 768px) {
+  .responsive-btn {
+    width: auto;
+    max-width: none;
+  }
+}
+
+.h1-lg {
+  font-size: 2.5rem;
+}
+
+@media (max-width: 767px) {
+  .h1-lg {
+    font-size: 1.5rem;
+  }
+}

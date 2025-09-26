@@ -32,7 +32,7 @@ const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
       <Container fluid className="px-3 px-md-4">
         {/* Logo & Brand */}
         <Navbar.Brand 
-          href="/dashboard" 
+          href="/" 
           className="d-flex align-items-center me-0 me-md-4"
           aria-label="ShiftRoom Home"
         >

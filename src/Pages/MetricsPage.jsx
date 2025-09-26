@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, ComposedChart
+  PieChart, Pie, Cell, Line, AreaChart, Area, ComposedChart
 } from 'recharts';
 import { Container, Row, Col, Card, Button, Form, Alert, Nav } from 'react-bootstrap';
-import { FaChartLine, FaCalendarAlt, FaMoneyBillWave, FaClock, FaSignOutAlt, FaArrowLeft, FaArrowRight, FaBuilding, FaFileContract, FaMoneyCheckAlt, FaExclamationTriangle, FaEdit } from 'react-icons/fa';
+import { FaCalendarAlt, FaMoneyBillWave, FaClock, FaArrowLeft, FaArrowRight, FaBuilding, FaFileContract, FaMoneyCheckAlt, FaEdit } from 'react-icons/fa';
 import { signOut } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebaseConfig';
@@ -590,6 +590,20 @@ const MetricsPage = () => {
     }));
   };
 
+  // Inside your component
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isSmallMobile, setIsSmallMobile] = useState(window.innerWidth < 576);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      setIsSmallMobile(window.innerWidth < 576);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Handle input changes for contract details
   const handleTempValueChange = (field, value) => {
     setTempValues(prev => ({
@@ -628,36 +642,39 @@ const MetricsPage = () => {
         {/* Header Section */}
         <div className="dashboard-header rounded-4 p-3 p-md-4 mb-3 mb-md-4 text-white">
           <Row className="align-items-center">
-            <Col xs={6} md={8} className="text-center text-md-start">
-              <h1 className="h3 h1-md fw-bold mb-2 mb-md-3">
-                <FaChartLine className="me-2" />
+            <Col xs={12} lg={8} className="text-center text-lg-start mb-3 mb-lg-0">
+              <h1 className="h4 h1-lg fw-bold mb-2 mb-lg-3">
                 SHIFTROOM ANALYTICS
               </h1>
-              <p className="mb-0 fs-6 fs-md-5 opacity-90">
+              <p className="mb-0 fs-6 fs-lg-5 opacity-90">
                 Insights and analytics for your work schedule
               </p>
             </Col>
-            <Col xs={3} md={4} className="text-end">
-              <Button 
-                variant="light" 
-                onClick={() => navigate("/timesheet")}
-                className="d-inline-flex align-items-center fw-bold sign-out-btn py-1 py-md-2"
-                size="sm"
-              >
-                <FaArrowLeft className="me-1 me-md-2" />
-                <span className="d-none d-md-inline">Back</span>
-              </Button>
-            </Col>
-            <Col xs={3} md={2}  className="text-end d-block d-md-none">
-              <Button 
-                variant="light" 
-                onClick={handleSignOut}
-                className="d-inline-flex align-items-center fw-bold sign-out-btn py-1 py-md-2"
-                size="sm"
-              >
-                <FaSignOutAlt className="me-1 me-md-2" />
-                <span className="d-none d-md-inline">Sign Out</span>
-              </Button>
+            <Col xs={12} lg={4} className="text-center text-lg-end">
+              <div className="d-flex flex-column flex-md-row justify-content-center justify-content-lg-end gap-2 gap-md-3">
+                <Button 
+                  variant="light" 
+                  onClick={() => navigate("/timesheet")}
+                  className="fw-bold responsive-nav-btn"
+                  style={{
+                    borderRadius: '12px',
+                    padding: '8px 16px',
+                    color: '#006D7D',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f0f8ff';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'white';
+                    e.currentTarget.style.transform = 'none';
+                  }}
+                >
+                  <FaArrowLeft className="me-1 me-md-2" />
+                  <span>Back to Shift Explorer</span>
+                </Button>
+              </div>
             </Col>
           </Row>
         </div>
@@ -1132,26 +1149,52 @@ const MetricsPage = () => {
                       </Col>
                       <Col xl={5} className="d-flex">
                         <Card className="border-0 shadow-sm chart-card flex-grow-1">
-                          <Card.Body className="d-flex flex-column p-3">
-                            <h4 className="h5 mb-3">Shift Distribution</h4>
-                            <div className="flex-grow-1" style={{ minHeight: '250px' }}>
+                          <Card.Body className="d-flex flex-column p-2 p-md-3">
+                            <h4 className="h5 mb-2 mb-md-3">Shift Distribution</h4>
+                            <div className="flex-grow-1 position-relative" style={{ 
+                              minHeight: isSmallMobile ? '200px' : isMobile ? '250px' : '300px' 
+                            }}>
                               <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
+                                <PieChart margin={isMobile ? { top: 10, right: 10, bottom: 30, left: 10 } : { top: 0, right: 0, bottom: 0, left: 0 }}>
                                   <Pie
                                     data={dashboardData.shiftTypeData}
                                     cx="50%"
                                     cy="50%"
                                     labelLine={false}
-                                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                    outerRadius={80}
+                                    label={({ name, percent }) => {
+                                      if (isSmallMobile) {
+                                        return `${(percent * 100).toFixed(0)}%`;
+                                      } else if (isMobile) {
+                                        // Shorten long names on mobile
+                                        const shortName = name.length > 10 ? `${name.substring(0, 8)}...` : name;
+                                        return `${shortName} ${(percent * 100).toFixed(0)}%`;
+                                      }
+                                      return `${name}: ${(percent * 100).toFixed(0)}%`;
+                                    }}
+                                    outerRadius={isSmallMobile ? 50 : isMobile ? 65 : 80}
+                                    innerRadius={isMobile ? 15 : 0}
                                     fill="#8884d8"
                                     dataKey="value"
+                                    isAnimationActive={!isSmallMobile} // Better performance on very small screens
                                   >
                                     {dashboardData.shiftTypeData.map((entry, index) => (
                                       <Cell key={`cell-${index}`} fill={SHIFT_COLORS[index % SHIFT_COLORS.length]} />
                                     ))}
                                   </Pie>
                                   <Tooltip />
+                                  {/* Always show legend on mobile for better usability */}
+                                  {isMobile && (
+                                    <Legend 
+                                      layout="horizontal"
+                                      verticalAlign="bottom"
+                                      align="center"
+                                      wrapperStyle={{
+                                        paddingTop: '15px',
+                                        fontSize: isSmallMobile ? '11px' : '11px',
+                                        marginBottom: isSmallMobile ? '20px' : '0'
+                                      }}
+                                    />
+                                  )}
                                 </PieChart>
                               </ResponsiveContainer>
                             </div>
