@@ -5,46 +5,27 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPas
 import app from "../firebaseConfig";
 import { useNavigate } from "react-router-dom";
 import { updateProfile } from "firebase/auth";
+import '../style/signinsignup.css';
 
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-const SignInSignUpBackup = ({ setUsername }) => {
+const SignInSignUpBackUp = ({ setUsername }) => {
   const [isSignUp, setIsSignUp] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setLocalUsername] = useState("");
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
 
-  // const handleGoogleSignIn = async () => {
-  //   try {
-  //     const result = await signInWithPopup(auth, provider);
-  //     const user = result.user;
-  //     setUser(user);
-  //     setUsername(user.displayName);
-  //     navigate("/dashboard", { 
-  //       state: { 
-  //         user: { 
-  //           email: user.email, 
-  //           displayName: user.displayName || user.email, 
-  //           uid: user.uid 
-  //         } 
-  //       } 
-  //     });
-  //   } catch (error) {
-  //     console.error("Google Sign-In Error:", error.message);
-  //     setError(error.message);
-  //   }
-  // };
-
-
-  // Testing Google SignIn
   const handleGoogleSignIn = async () => {
     try {
-      // Add prompt parameter to force account selection
+      setIsLoading(true);
+      setError("");
+      
       provider.setCustomParameters({
         prompt: "select_account"
       });
@@ -52,15 +33,12 @@ const SignInSignUpBackup = ({ setUsername }) => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       
-      // Ensure we have a display name (use email if missing)
       const displayName = user.displayName || user.email.split('@')[0] || user.email;
       
-      // Update local state and parent component
       setUser(user);
       setLocalUsername(displayName);
       setUsername(displayName);
       
-      // Navigate with consistent user data format
       navigate("/dashboard", {
         state: {
           user: {
@@ -73,7 +51,6 @@ const SignInSignUpBackup = ({ setUsername }) => {
     } catch (error) {
       console.error("Google Sign-In Error:", error);
       
-      // Enhanced error messages
       let errorMessage = "Google authentication failed";
       if (error.code === "auth/popup-closed-by-user") {
         errorMessage = "Popup closed before completing sign-in";
@@ -82,22 +59,25 @@ const SignInSignUpBackup = ({ setUsername }) => {
       }
       
       setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // FIXED: Email/password authentication
   const handleEmailPasswordAuth = async (e) => {
     e.preventDefault();
-    setError(""); // Clear previous errors
+    setError("");
+    setIsLoading(true);
     
-    // Validation
     if (!email || !password) {
       setError("Please fill in all fields");
+      setIsLoading(false);
       return;
     }
     
     if (isSignUp && !username) {
       setError("Please enter a username");
+      setIsLoading(false);
       return;
     }
     
@@ -105,14 +85,11 @@ const SignInSignUpBackup = ({ setUsername }) => {
       let userCredential;
       
       if (isSignUp) {
-        // Create new user
         userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        // Update profile with username
         await updateProfile(userCredential.user, {
           displayName: username
         });
       } else {
-        // Sign in existing user
         userCredential = await signInWithEmailAndPassword(auth, email, password);
       }
       
@@ -131,7 +108,6 @@ const SignInSignUpBackup = ({ setUsername }) => {
     } catch (error) {
       console.error("Authentication Error:", error);
       
-      // User-friendly error messages
       switch (error.code) {
         case "auth/email-already-in-use":
           setError("Email already in use. Please sign in instead.");
@@ -154,289 +130,235 @@ const SignInSignUpBackup = ({ setUsername }) => {
         default:
           setError("Authentication failed. Please try again.");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Container fluid className="p-0 min-vh-100">
-      <Row className="g-0 h-100">
-        {/* Left Side - Brand Showcase */}
+    <Container fluid className="auth-container p-0 min-vh-100 d-flex align-items-center justify-content-center">
+      <Row className="g-0 w-100 h-100">
+        {/* Left Side - Enhanced Brand Showcase */}
         <Col 
-          md={6} 
-          className="d-none d-md-flex align-items-center justify-content-center p-5"
-          style={{
-            background: 'linear-gradient(135deg, #006D7D 0%, #5E7CE2 100%)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}
+          lg={6} 
+          md={5}
+          className="brand-section d-none d-md-flex align-items-center justify-content-center p-4 p-lg-5"
         >
-          {/* Animated background elements */}
-          <div 
-            style={{
-              position: 'absolute',
-              top: '-50px',
-              right: '-50px',
-              width: '200px',
-              height: '200px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-            }}
-          ></div>
-          <div 
-            style={{
-              position: 'absolute',
-              bottom: '20%',
-              left: '10%',
-              width: '100px',
-              height: '100px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(255, 255, 255, 0.15)',
-            }}
-          ></div>
-          
-          <div className="text-center text-white position-relative z-1" style={{ maxWidth: '500px' }}>
-            <h1 
-              className="display-4 fw-bold mb-4"
-              style={{ fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}
-            >
-              ShiftRoom
-            </h1>
-            <p className="fs-3 mb-4">Track. Calculate. Optimize.</p>
-            <div className="mt-5 pt-3">
-              {[
-                { icon: '⏱️', text: 'Track working hours with precision' },
-                { icon: '💰', text: 'Calculate earnings instantly' },
-                { icon: '📊', text: 'Analyze your work patterns' }
-              ].map((item, index) => (
-                <div key={index} className="d-flex align-items-center mb-3">
-                  <div className="fs-2 me-3">{item.icon}</div>
-                  <p className="mb-0 fs-5">{item.text}</p>
+          <div className="brand-content text-center text-white position-relative">
+            {/* Enhanced Background Elements */}
+            <div className="floating-shape shape-1"></div>
+            <div className="floating-shape shape-2"></div>
+            <div className="floating-shape shape-3"></div>
+            <div className="floating-shape shape-4"></div>
+            <div className="floating-shape shape-5"></div>
+            
+            {/* Geometric Pattern Overlay */}
+            <div className="geometric-pattern"></div>
+            
+            {/* Main Brand Content */}
+            <div className="brand-header mb-4">
+              <h1 className="brand-title mb-3">
+                ShiftRoom
+              </h1>
+              <div className="brand-subtitle-container">
+                <p className="brand-subtitle">Track. Calculate. Optimize.</p>
+                <div className="title-underline"></div>
+              </div>
+            </div>
+            
+            {/* Enhanced Features Grid */}
+            <div className="features-grid">
+              <div className="feature-card">
+                <div className="feature-number">01</div>
+                <div className="feature-content">
+                  <h4>Smart Tracking</h4>
+                  <p>Precision time tracking with intelligent categorization</p>
                 </div>
-              ))}
+              </div>
+              
+              <div className="feature-card">
+                <div className="feature-number">02</div>
+                <div className="feature-content">
+                  <h4>Earnings Insight</h4>
+                  <p>Real-time calculations and financial analytics</p>
+                </div>
+              </div>
+              
+              <div className="feature-card">
+                <div className="feature-number">03</div>
+                <div className="feature-content">
+                  <h4>Productivity Analytics</h4>
+                  <p>Deep insights into your work patterns and efficiency</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats Bar */}
+            <div className="stats-bar">
+              <div className="stat-item">
+                <div className="stat-value">10K+</div>
+                <div className="stat-label">Users</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-value">500K+</div>
+                <div className="stat-label">Hours Tracked</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-value">98%</div>
+                <div className="stat-label">Satisfaction</div>
+              </div>
             </div>
           </div>
         </Col>
 
-        {/* Right Side - Form */}
-                <Col 
-          md={6} 
-          className="d-flex align-items-center justify-content-center p-4 p-md-5"
-          style={{ backgroundColor: '#f8fafc' }}
+        {/* Right Side - Compact Form */}
+        <Col 
+          lg={6} 
+          md={7}
+          className="form-section d-flex align-items-center justify-content-center p-3 p-md-4"
         >
-          <div 
-            className="w-100" 
-            style={{ maxWidth: '450px' }}
-          >
-            <div className="text-center mb-4">
-              <h2 
-                className="fw-bold mb-1"
-                style={{
-                  color: '#006D7D',
-                  fontSize: '2rem',
-                  fontFamily: "'Segoe UI', 'Roboto', sans-serif"
-                }}
-              >
-                {isSignUp ? "Create Your Account" : "Welcome Back"}
+          <div className="form-container compact-form w-100">
+            {/* Compact Header */}
+            <div className="text-center mb-3">
+              <h2 className="form-title mb-1">
+                {isSignUp ? "Create Account" : "Welcome Back"}
               </h2>
-              <p 
-                className="text-muted"
-                style={{ fontSize: '1.1rem' }}
-              >
-                {isSignUp 
-                  ? "Start tracking your work hours today" 
-                  : "Sign in to continue your work journey"}
+              <p className="form-subtitle">
+                {isSignUp ? "Join thousands of professionals" : "Continue your productivity journey"}
               </p>
             </div>
 
             {/* Tab Navigation */}
-            <div className="d-flex mb-4 border rounded-pill overflow-hidden">
+            <div className="auth-tabs compact-tabs mb-3">
               <button
-                className={`flex-grow-1 py-3 fw-bold border-0 ${!isSignUp ? 'active-tab' : 'inactive-tab'}`}
+                className={`auth-tab ${!isSignUp ? 'auth-tab-active' : ''}`}
                 onClick={() => {
                   setIsSignUp(false);
                   setError("");
                 }}
-                style={{
-                  backgroundColor: !isSignUp ? '#006D7D' : 'transparent',
-                  color: !isSignUp ? 'white' : '#006D7D',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}
+                disabled={isLoading}
               >
                 Sign In
               </button>
               <button
-                className={`flex-grow-1 py-3 fw-bold border-0 ${isSignUp ? 'active-tab' : 'inactive-tab'}`}
+                className={`auth-tab ${isSignUp ? 'auth-tab-active' : ''}`}
                 onClick={() => {
                   setIsSignUp(true);
                   setError("");
                 }}
-                style={{
-                  backgroundColor: isSignUp ? '#006D7D' : 'transparent',
-                  color: isSignUp ? 'white' : '#006D7D',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}
+                disabled={isLoading}
               >
                 Sign Up
               </button>
             </div>
 
-            <Card className="border-0 shadow-sm rounded-3 overflow-hidden">
-              <Card.Body className="p-4 p-md-5">
+            {/* Compact Form Card */}
+            <Card className="auth-card compact-card">
+              <Card.Body className="p-3">
                 {error && (
-                  <div className="alert alert-danger mb-4">
-                    {error}
+                  <div className="alert alert-danger d-flex align-items-center mb-3" role="alert">
+                    <div className="alert-icon">⚠️</div>
+                    <div className="alert-message small">{error}</div>
                   </div>
                 )}
                 
-                <Form onSubmit={handleEmailPasswordAuth}>
+                <Form onSubmit={handleEmailPasswordAuth} className="auth-form compact-form">
                   {isSignUp && (
-                    <Form.Group controlId="formUsername" className="mb-4">
-                      <Form.Label className="fw-medium" style={{ color: '#5c5c5c' }}>Username</Form.Label>
+                    <Form.Group controlId="formUsername" className="mb-2">
+                      <Form.Label className="form-label small">Username</Form.Label>
                       <Form.Control
                         type="text"
-                        placeholder="Enter your username"
+                        placeholder="Enter username"
                         value={username}
                         onChange={(e) => setLocalUsername(e.target.value)}
-                        className="py-3 px-4 border-1"
-                        style={{ 
-                          borderColor: '#ddd',
-                          borderRadius: '10px',
-                          backgroundColor: '#fdfdfd'
-                        }}
+                        className="form-input compact-input"
+                        disabled={isLoading}
                         required
                       />
                     </Form.Group>
                   )}
                   
-                  <Form.Group controlId="formEmail" className="mb-4">
-                    <Form.Label className="fw-medium" style={{ color: '#5c5c5c' }}>Email</Form.Label>
+                  <Form.Group controlId="formEmail" className="mb-2">
+                    <Form.Label className="form-label small">Email</Form.Label>
                     <Form.Control
                       type="email"
-                      placeholder="Enter your email"
+                      placeholder="Enter email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="py-3 px-4 border-1"
-                      style={{ 
-                        borderColor: '#ddd',
-                        borderRadius: '10px',
-                        backgroundColor: '#fdfdfd'
-                      }}
+                      className="form-input compact-input"
+                      disabled={isLoading}
                       required
                     />
                   </Form.Group>
                   
-                  <Form.Group controlId="formPassword" className="mb-4">
-                    <Form.Label className="fw-medium" style={{ color: '#5c5c5c' }}>Password</Form.Label>
+                  <Form.Group controlId="formPassword" className="mb-3">
+                    <Form.Label className="form-label small">Password</Form.Label>
                     <Form.Control
                       type="password"
-                      placeholder="Enter your password"
+                      placeholder="Enter password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="py-3 px-4 border-1"
-                      style={{ 
-                        borderColor: '#ddd',
-                        borderRadius: '10px',
-                        backgroundColor: '#fdfdfd'
-                      }}
+                      className="form-input compact-input"
+                      disabled={isLoading}
                       required
                     />
                     {isSignUp && (
-                      <Form.Text className="text-muted">
-                        Password must be at least 6 characters
+                      <Form.Text className="form-help extra-small">
+                        Minimum 6 characters
                       </Form.Text>
                     )}
                   </Form.Group>
                   
                   <Button
-                    variant="primary"
                     type="submit"
-                    className="w-100 py-3 fw-bold border-0 mb-3"
-                    style={{ 
-                      backgroundColor: '#006D7D', 
-                      borderRadius: '10px',
-                      fontSize: '1.1rem',
-                      transition: 'all 0.3s ease'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#005a68'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#006D7D'}
+                    className="auth-button primary w-100 mb-2 compact-button"
+                    disabled={isLoading}
                   >
+                    {isLoading ? (
+                      <div className="spinner-border spinner-border-sm me-2" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                    ) : null}
                     {isSignUp ? "Create Account" : "Sign In"}
                   </Button>
                 </Form>
 
-                {/* Divider */}
-                <div className="position-relative text-center my-4">
-                  <div 
-                    style={{ 
-                      height: '1px', 
-                      backgroundColor: '#eee',
-                      position: 'absolute',
-                      top: '50%',
-                      left: 0,
-                      right: 0
-                    }}
-                  ></div>
-                  <span 
-                    className="px-3 bg-white position-relative"
-                    style={{ color: '#777' }}
-                  >
-                    or continue with
-                  </span>
-                </div>
+
 
                 {/* Google Sign-In */}
                 <Button
-                  variant="outline-light"
-                  className="w-100 py-3 d-flex align-items-center justify-content-center border-1 mb-3"
-                  style={{ 
-                    borderColor: '#ddd',
-                    borderRadius: '10px',
-                    backgroundColor: '#fff',
-                    color: '#5c5c5c',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f8f8'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+                  variant="outline"
+                  className="auth-button google w-100 d-flex align-items-center justify-content-center mb-3 compact-button"
                   onClick={handleGoogleSignIn}
+                  disabled={isLoading}
                 >
-                  <FcGoogle className="fs-4 me-2" />
-                  <span className="fw-medium">
-                    {isSignUp ? "SignUp With Google" : "Sign In With Google"}
-                  </span>
+                  <span className="divider-text  me-2 ">or continue with Google</span>
+                  <FcGoogle className="google-icon me-2" />
                 </Button>
 
                 {/* Toggle between Sign In/Sign Up */}
-                <div className="text-center mt-3 pt-2">
-                  <p className="mb-0" style={{ color: '#777' }}>
-                    {isSignUp
-                      ? "Already have an account? "
-                      : "Don't have an account? "}
-                    <span
+                {/* <div className="text-center mt-3">
+                  <p className="toggle-text small mb-0">
+                    {isSignUp ? "Have an account? " : "No account? "}
+                    <button
+                      type="button"
+                      className="toggle-link small"
                       onClick={() => {
                         setIsSignUp(!isSignUp);
-                        setError(""); // Clear error when toggling
+                        setError("");
                       }}
-                      className="fw-bold cursor-pointer"
-                      style={{
-                        color: '#5E7CE2',
-                        cursor: "pointer",
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#4a64c7'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#5E7CE2'}
+                      disabled={isLoading}
                     >
                       {isSignUp ? "Sign In" : "Sign Up"}
-                    </span>
+                    </button>
                   </p>
-                </div>
+                </div> */}
               </Card.Body>
             </Card>
 
-            {/* Footer Note */}
-            <p className="text-center text-muted mt-4" style={{ fontSize: '0.85rem' }}>
-              By signing in, you agree to our <span style={{ color: '#5E7CE2', cursor: 'pointer' }}>Terms</span> and <span style={{ color: '#5E7CE2', cursor: 'pointer' }}>Privacy Policy</span>
+            {/* Compact Legal Text */}
+            <p className="legal-text extra-small text-center mt-3">
+              By signing in, you agree to our <a href="#terms">Terms</a> and <a href="#privacy">Privacy</a>
             </p>
           </div>
         </Col>
@@ -445,4 +367,4 @@ const SignInSignUpBackup = ({ setUsername }) => {
   );
 };
 
-export default SignInSignUpBackup;
+export default SignInSignUpBackUp;

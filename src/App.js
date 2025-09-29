@@ -19,6 +19,7 @@ import FeaturesPage from "./Pages/FeaturesPage";
 import ComingSoon from "./Pages/ComingSoon";
 import MetricsPage from "./Pages/MetricsPage";
 import LandingPage from "./Pages/LandingPage";
+import ScrollToTopWrapper from "./Components/ScrollToTopWrapper";
 
 
 
@@ -39,23 +40,29 @@ function App() {
 
   return (
     <Router>
-      <NavigationBar isAuthenticated={isAuthenticated} setAuthenticated={setAuthenticated} />
-      <AuthProvider>
-        <Routes>
-          <Route path="/" element={<LandingPage/>} />
-          <Route path="/signin" element={<SignInSignUp setUsername={setUsername}  />} />
-          <Route path="/dashboard/metrics" element={<MetricsPage />} />
-          <Route path="/dashboard" element={<Dashboard username={username} />} /> 
-          <Route path="/timesheet" element={<Form />} />
-          <Route path="/contact" element={<ContactPage />} />   
-          <Route path="/features" element={<FeaturesPage />} />
-          <Route path="/coming" element={<ComingSoon />} /> 
+      <ScrollToTopWrapper>
+        <NavigationBar isAuthenticated={isAuthenticated} setAuthenticated={setAuthenticated} />
+        <AuthProvider>
+          <Routes>
+              <Route path="/" element={<LandingPage/>} />
+              <Route path="/signin" element={<SignInSignUp setUsername={setUsername}  />} />
+              <Route path="/dashboard/metrics" element={<MetricsPage />} />
+              <Route path="/dashboard" element={<Dashboard username={username} />} /> 
+              <Route path="/timesheet" element={<Form />} />
+              <Route path="/contact" element={<ContactPage />} />   
+              <Route path="/features" element={<FeaturesPage />} />
+              <Route path="/coming" element={<ComingSoon />} /> 
+              {/* <Route path="/rota" element={<StaffSchedule/>} /> */}
 
-          {/* <Route path="/rota" element={<StaffSchedule/>} /> */}
+        
+            
 
-        </Routes>
-      </AuthProvider>
-      <Footer />
+          </Routes>
+        </AuthProvider>
+        <Footer />
+
+        </ScrollToTopWrapper>
+      
     </Router>
 
   );

@@ -108,12 +108,12 @@ const NavigationBar = ({ isAuthenticated, setAuthenticated }) => {
                         style={{
                          borderRadius: '12px',
                          padding: '12px 24px',
-                         color: '#e4dcdaff',
+                         color: '#0f7184ff',
                          transition: 'all 0.3s ease'
                         }}
                       
                         onMouseEnter={(e) => {
-                         e.currentTarget.style.backgroundColor = '#d9422eff';
+                         e.currentTarget.style.borderColor = '#625153ff';
                          e.currentTarget.style.transform = 'translateY(-2px)';
                         }}
                         onMouseLeave={(e) => {
