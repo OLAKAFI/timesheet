@@ -364,3 +364,94 @@ body {
     font-size: 1.5rem;
   }
 }
+
+
+/* NHS Enhancement Colors */
+.nhs-evening { border-left: 4px solid #ffc107 !important; }
+.nhs-night { border-left: 4px solid #0dcaf0 !important; }
+.nhs-saturday { border-left: 4px solid #0d6efd !important; }
+.nhs-sunday { border-left: 4px solid #198754 !important; }
+.nhs-bank-holiday { border-left: 4px solid #dc3545 !important; }
+
+/* Calendar Day Styling */
+.calendar-day {
+  border: 1px solid #dee2e6;
+  transition: all 0.3s ease;
+}
+
+.calendar-day:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.calendar-day.weekend {
+  background-color: #f8f9fa;
+}
+
+/* Time Input Styling */
+.time-input {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  height: auto;
+}
+
+/* Hours Badge */
+.hours-badge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+  background: linear-gradient(135deg, #006D7D 0%, #5E7CE2 100%);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .calendar-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  .calendar-header {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  .time-input {
+    font-size: 0.7rem;
+  }
+}
+
+/* Print Styles for NHS Breakdown */
+@media print {
+  .modal-content {
+    box-shadow: none !important;
+    border: none !important;
+  }
+  .modal-header, .modal-footer {
+    display: none !important;
+  }
+  .modal-body {
+    padding: 0 !important;
+  }
+}
+
+/* NHS Color Coding */
+.border-warning {
+  border-color: #ffc107 !important;
+}
+
+.border-info {
+  border-color: #0dcaf0 !important;
+}
+
+.border-primary {
+  border-color: #0d6efd !important;
+}
+
+.border-success {
+  border-color: #198754 !important;
+}
+
+.border-danger {
+  border-color: #dc3545 !important;
+}

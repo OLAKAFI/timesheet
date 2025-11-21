@@ -1,0 +1,482 @@
+/* Modern Appointment Scheduler Styles */
+.dashboard-header {
+  background: linear-gradient(135deg, #006D7D, #5E7CE2) !important;
+}
+
+/* Calendar Container with Proper Padding */
+.calendar-container {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.calendar-container .card-body {
+  padding: 20px !important;
+}
+
+/* Standardized Calendar Weekday Headers */
+.calendar-weekdays {
+  margin-bottom: 8px;
+}
+
+.weekday-header {
+  background: linear-gradient(135deg, #006D7D, #5E7CE2);
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 10px 4px !important;
+  margin: 0 2px;
+  text-align: center;
+}
+
+/* Standardized Calendar Days Grid */
+.calendar-days-grid {
+  gap: 4px;
+}
+
+/* Standardized Calendar Day Boxes */
+.standardized-day {
+  aspect-ratio: 1 / 1;
+  min-height: 0;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  position: relative;
+}
+
+.standardized-day:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+}
+
+.standardized-day:focus {
+  outline: 2px solid #006D7D;
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+/* Day Header Styles */
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.day-number {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.today-number {
+  color: #006D7D;
+  font-weight: 700;
+}
+
+.other-month-number {
+  color: #adb5bd !important;
+  font-weight: 400;
+}
+
+.today-indicator {
+  width: 6px;
+  height: 6px;
+  background: #006D7D;
+  border-radius: 50%;
+  margin-top: 2px;
+}
+
+/* Other Month Days */
+.other-month-day {
+  background-color: #f8f9fa !important;
+  opacity: 0.5;
+}
+
+.other-month-day .appointment-badge {
+  display: none;
+}
+
+/* Today Highlight */
+.today-day {
+  background-color: rgba(0, 109, 125, 0.08) !important;
+  border: 2px solid #006D7D !important;
+}
+
+/* Appointments Container */
+.appointments-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+/* Standardized Appointment Badges */
+.appointment-badge {
+  background: #006D7D;
+  color: white;
+  border-radius: 4px;
+  padding: 3px 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.appointment-badge:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.appointment-time {
+  font-size: 0.6rem;
+  font-weight: 600;
+  line-height: 1;
+  margin-bottom: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appointment-title {
+  font-size: 0.55rem;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Enhanced Typography Hierarchy */
+.appointment-title {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: #2c3e50 !important;
+}
+
+.appointment-primary-info {
+  font-size: 0.85rem;
+}
+
+.time-badge,
+.type-badge {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+}
+
+.location-text,
+.video-info {
+  font-size: 0.8rem;
+}
+
+.description-text {
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.see-more-btn {
+  font-size: 0.8rem;
+}
+
+/* Modern Day View Modal */
+.modern-day-modal .modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.modern-day-modal .modal-header {
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
+  border-radius: 12px 12px 0 0;
+}
+
+.date-indicator {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid #e9ecef;
+}
+
+.date-indicator.today {
+  background: linear-gradient(135deg, #006D7D, #5E7CE2);
+  color: white;
+  border: none;
+}
+
+.date-indicator .day-number {
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.date-indicator .month-name {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.day-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #2c3e50;
+}
+
+.date-string {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.quick-stats {
+  padding: 10px;
+  background: rgba(0, 109, 125, 0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 109, 125, 0.1);
+}
+
+.stat-item {
+  padding: 0 10px;
+}
+
+.stat-number {
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* Enhanced Appointment Cards */
+.appointment-card {
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.appointment-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.appointment-details {
+  border-top: 1px solid #f1f3f4;
+  padding-top: 12px;
+}
+
+.see-more-section {
+  border-top: 1px solid #f8f9fa;
+  padding-top: 8px;
+}
+
+.see-more-btn:hover {
+  color: #006D7D !important;
+}
+
+.color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Modern Buttons */
+.modern-primary-btn {
+  background: linear-gradient(135deg, #006D7D, #5E7CE2);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.modern-primary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 109, 125, 0.3);
+}
+
+.action-btn {
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Empty State */
+.empty-state {
+  padding: 30px 20px;
+}
+
+.empty-icon {
+  opacity: 0.5;
+}
+
+/* Guest Tags */
+.guest-tags .badge {
+  border-radius: 10px;
+  font-size: 0.7rem;
+}
+
+/* Responsive Design - Standardized across all screens */
+@media (max-width: 767.98px) {
+  .calendar-container .card-body {
+    padding: 12px !important;
+  }
+  
+  .weekday-header {
+    font-size: 0.75rem;
+    padding: 8px 2px !important;
+  }
+  
+  .standardized-day {
+    padding: 4px;
+    border-radius: 6px;
+  }
+  
+  .day-number {
+    font-size: 0.8rem;
+  }
+  
+  .appointment-time {
+    font-size: 0.55rem;
+  }
+  
+  .appointment-title {
+    font-size: 0.5rem;
+  }
+  
+  .dashboard-header {
+    padding: 1rem !important;
+  }
+  
+  .dashboard-header h1 {
+    font-size: 1.1rem !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .calendar-container .card-body {
+    padding: 8px !important;
+  }
+  
+  .weekday-header {
+    font-size: 0.7rem;
+    padding: 6px 1px !important;
+  }
+  
+  .standardized-day {
+    padding: 3px;
+  }
+  
+  .day-number {
+    font-size: 0.75rem;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .calendar-container .card-body {
+    padding: 16px !important;
+  }
+  
+  .weekday-header {
+    font-size: 0.8rem;
+  }
+  
+  .standardized-day {
+    padding: 5px;
+  }
+  
+  .dashboard-header h1 {
+    font-size: 1.3rem !important;
+  }
+}
+
+/* Large desktop optimizations */
+@media (min-width: 1200px) {
+  .calendar-container .card-body {
+    padding: 24px !important;
+  }
+  
+  .weekday-header {
+    font-size: 0.9rem;
+    padding: 12px 4px !important;
+  }
+  
+  .standardized-day {
+    padding: 8px;
+  }
+}
+
+/* Focus styles for accessibility */
+.standardized-day:focus-visible,
+.appointment-badge:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid #006D7D;
+  outline-offset: 2px;
+}
+
+/* Input focus without flashing */
+.form-control {
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+}
+
+.form-control:focus {
+  border-color: #006D7D !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 109, 125, 0.25) !important;
+  outline: none !important;
+}
+
+/* Smooth animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.appointment-card {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Print styles */
+@media print {
+  .btn,
+  .offcanvas,
+  .modal,
+  .d-print-none,
+  .dashboard-header .btn {
+    display: none !important;
+  }
+  
+  .standardized-day {
+    break-inside: avoid;
+    border: 1px solid #000 !important;
+    aspect-ratio: unset;
+    min-height: 80px;
+  }
+  
+  .appointment-badge {
+    color: #000 !important;
+    background-color: transparent !important;
+    border: 1px solid #000 !important;
+  }
+}
