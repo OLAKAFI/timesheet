@@ -18,7 +18,7 @@ const Dashboard = ({ username }) => {
         title: "Smart Time Tracking",
         description: "Automated time tracking with intelligent categorization and real-time insights",
         gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        url: '/timesheet'
+        url: '/dashboard/appointments'
       },
       {
         icon: <FaChartLine className="feature-icon" />,

@@ -19,7 +19,9 @@ import FeaturesPage from "./Pages/FeaturesPage";
 import ComingSoon from "./Pages/ComingSoon";
 import MetricsPage from "./Pages/MetricsPage";
 import LandingPage from "./Pages/LandingPage";
+import AppointmentScheduler from "./Pages/AppointmentScheduler";
 import ScrollToTopWrapper from "./Components/ScrollToTopWrapper";
+import BookingPage from "./Pages/BookingPage";
 
 
 
@@ -51,7 +53,10 @@ function App() {
               <Route path="/timesheet" element={<Form />} />
               <Route path="/contact" element={<ContactPage />} />   
               <Route path="/features" element={<FeaturesPage />} />
-              <Route path="/coming" element={<ComingSoon />} /> 
+              <Route path="/coming" element={<ComingSoon />} />
+              // In your App.js or routing file
+              <Route path="/dashboard/appointments" element={<AppointmentScheduler />} />
+              <Route path="/book/:userId" element={<BookingPage />} />
               {/* <Route path="/rota" element={<StaffSchedule/>} /> */}
 
         
