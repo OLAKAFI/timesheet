@@ -95,24 +95,12 @@ const BookingPage = () => {
         const userProfileSnap = await getDoc(userProfileRef);
         
         if (userProfileSnap.exists()) {
-          // User profile exists
           setUserProfile(userProfileSnap.data());
           console.log("User profile loaded:", userProfileSnap.data());
         } else {
-          // Create a default profile if none exists
-          const defaultProfile = {
-            name: "Calendar Owner",
-            email: "owner@example.com", 
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            defaultDuration: 60,
-            workingHours: {
-              start: "09:00",
-              end: "17:00"
-            },
-            meetingTypes: ["in-person", "video", "phone"]
-          };
-          setUserProfile(defaultProfile);
-          console.log("Using default profile");
+          setError("Calendar owner not found. Please check the booking link.");
+          setIsLoading(false);
+          return;
         }
 
         // Load existing appointments for this user (next 30 days only)
@@ -142,7 +130,8 @@ const BookingPage = () => {
           },
           (error) => {
             console.error("Error loading appointments:", error);
-            setError("Failed to load availability. Please try again.");
+            // Don't set error here - we can still show the form with limited functionality
+            setAppointments([]);
             setIsLoading(false);
           }
         );
@@ -180,10 +169,10 @@ const BookingPage = () => {
     // Get existing appointments for selected date
     const dayAppointments = appointments.filter(apt => apt.date === dateStr);
     
-    // Convert working hours to minutes
-    const workStart = timeToMinutes(userProfile.workingHours.start);
-    const workEnd = timeToMinutes(userProfile.workingHours.end);
-    const slotDuration = userProfile.defaultDuration;
+    // Use default working hours if userProfile doesn't have them
+    const workStart = timeToMinutes(userProfile.workingHours?.start || "09:00");
+    const workEnd = timeToMinutes(userProfile.workingHours?.end || "17:00");
+    const slotDuration = userProfile.defaultDuration || 60;
     
     // Generate slots from working hours (every 30 minutes)
     for (let time = workStart; time <= workEnd - slotDuration; time += 30) {
@@ -234,76 +223,38 @@ const BookingPage = () => {
   };
 
   // Submit booking
-  // const handleSubmitBooking = async () => {
-  //   // Validation
-  //   if (!bookingForm.guestName.trim()) {
-  //     alert("Please enter your name");
-  //     return;
-  //   }
+  const handleSubmitBooking = async () => {
+    // Validation
+    if (!bookingForm.guestName.trim()) {
+      alert("Please enter your name");
+      return;
+    }
 
-  //   if (!validateEmail(bookingForm.guestEmail)) {
-  //     alert("Please enter a valid email address");
-  //     return;
-  //   }
+    if (!validateEmail(bookingForm.guestEmail)) {
+      alert("Please enter a valid email address");
+      return;
+    }
 
-  //   if (!selectedSlot) {
-  //     alert("Please select a time slot");
-  //     return;
-  //   }
+    if (!selectedSlot) {
+      alert("Please select a time slot");
+      return;
+    }
 
-  //   // Check if slot is still available (prevent double-booking)
-  //   const currentSlots = generateAvailableSlots();
-  //   const isSlotStillAvailable = currentSlots.some(slot => 
-  //     slot.start === selectedSlot.start && slot.end === selectedSlot.end
-  //   );
+    // Check if slot is still available (prevent double-booking)
+    const currentSlots = generateAvailableSlots();
+    const isSlotStillAvailable = currentSlots.some(slot => 
+      slot.start === selectedSlot.start && slot.end === selectedSlot.end
+    );
 
-  //   if (!isSlotStillAvailable) {
-  //     alert("Sorry, this time slot is no longer available. Please select another time.");
-  //     setSelectedSlot(null);
-  //     return;
-  //   }
-
-  //   setIsSubmitting(true);
-
-  //   try {
-  //     const bookingData = {
-  //       title: `Meeting with ${sanitizeInput(bookingForm.guestName)}`,
-  //       description: sanitizeInput(bookingForm.notes),
-  //       date: selectedDate,
-  //       startTime: selectedSlot.start,
-  //       endTime: selectedSlot.end,
-  //       guests: [bookingForm.guestEmail],
-  //       location: "To be determined",
-  //       meetingType: "in-person",
-  //       color: "#006D7D",
-  //       userId: userId,
-  //       guestName: sanitizeInput(bookingForm.guestName),
-  //       guestEmail: bookingForm.guestEmail,
-  //       isBooking: true,
-  //       createdAt: new Date(),
-  //       status: "confirmed",
-  //       createdBy: "external" // Mark as external booking
-  //     };
-
-  //     await addDoc(collection(db, "appointments"), bookingData);
-  //     setBookingSuccess(true);
-      
-  //   } catch (error) {
-  //     console.error("Error creating booking:", error);
-  //     alert("Error creating booking. Please try again.");
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
-
-    const handleSubmitBooking = async () => {
-    // Validation (keep existing validation)
+    if (!isSlotStillAvailable) {
+      alert("Sorry, this time slot is no longer available. Please select another time.");
+      setSelectedSlot(null);
+      return;
+    }
 
     setIsSubmitting(true);
 
     try {
-      // Create a clean booking data object
       const bookingData = {
         title: `Meeting with ${sanitizeInput(bookingForm.guestName)}`,
         description: sanitizeInput(bookingForm.notes) || "",
@@ -318,11 +269,10 @@ const BookingPage = () => {
         guestName: sanitizeInput(bookingForm.guestName),
         guestEmail: bookingForm.guestEmail,
         isBooking: true,
-        status: "pending", // Start as pending
+        status: "pending",
         createdAt: new Date(),
         createdBy: "external",
         duration: userProfile?.defaultDuration || 60,
-        // Add these fields to ensure data consistency
         updatedAt: new Date(),
         approved: false
       };
@@ -364,34 +314,19 @@ const BookingPage = () => {
     } finally {
       setIsSubmitting(false);
     }
-    };
+  };
 
-
-
-    // Reset form for new booking
-    // const handleNewBooking = () => {
-    //   setBookingSuccess(false);
-    //   setSelectedSlot(null);
-    //   setBookingForm({
-    //     guestName: "",
-    //     guestEmail: "",
-    //     notes: ""
-    //   });
-    // };
-
-    // Update the reset function
-    const handleNewBooking = () => {
-      setBookingSuccess(false);
-      setBookedSlot(null);
-      setSelectedSlot(null);
-      setBookingForm({
-        guestName: "",
-        guestEmail: "",
-        notes: ""
-      });
-    };
-
-
+  // Reset form for new booking
+  const handleNewBooking = () => {
+    setBookingSuccess(false);
+    setBookedSlot(null);
+    setSelectedSlot(null);
+    setBookingForm({
+      guestName: "",
+      guestEmail: "",
+      notes: ""
+    });
+  };
 
   // Loading state
   if (isLoading) {
@@ -406,7 +341,7 @@ const BookingPage = () => {
   }
 
   // Error state
-  if (error) {
+  if (error && !userProfile) {
     return (
       <Container className="min-vh-100 d-flex align-items-center">
         <Row className="w-100 justify-content-center">
@@ -440,51 +375,49 @@ const BookingPage = () => {
     );
   }
 
-  
-
-  // Update the success page section to use bookedSlot instead of selectedSlot
+  // Success state
   if (bookingSuccess) {
-  return (
-    <Container className="min-vh-100 d-flex align-items-center">
-      <Row className="w-100 justify-content-center">
-        <Col md={8} lg={6}>
-          <Card className="border-0 shadow-sm">
-            <Card.Body className="text-center p-5">
-              <FaCheckCircle size={64} className="text-warning mb-4" />
-              <h2 className="mb-3">Booking Request Sent!</h2>
-              <p className="text-muted mb-4">
-                Your meeting request for <strong>{selectedDate}</strong> at <strong>{bookedSlot?.start}</strong> has been received.
-              </p>
-              <Alert variant="warning" className="mb-4">
-                <FaExclamationTriangle className="me-2" />
-                <strong>Pending Approval:</strong> The calendar owner needs to approve your booking. 
-                You'll receive a confirmation email once approved.
-              </Alert>
-              <p className="text-muted mb-4">
-                A confirmation email has been sent to <strong>{bookingForm.guestEmail}</strong>.
-              </p>
-              <div className="d-flex gap-3 justify-content-center">
-                <Button 
-                  variant="primary" 
-                  onClick={handleNewBooking}
-                  size="lg"
-                >
-                  Book Another Meeting
-                </Button>
-                <Button 
-                  variant="outline-secondary" 
-                  onClick={() => navigate("/")}
-                  size="lg"
-                >
-                  Return Home
-                </Button>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
-  );
+    return (
+      <Container className="min-vh-100 d-flex align-items-center">
+        <Row className="w-100 justify-content-center">
+          <Col md={8} lg={6}>
+            <Card className="border-0 shadow-sm">
+              <Card.Body className="text-center p-5">
+                <FaCheckCircle size={64} className="text-warning mb-4" />
+                <h2 className="mb-3">Booking Request Sent!</h2>
+                <p className="text-muted mb-4">
+                  Your meeting request for <strong>{selectedDate}</strong> at <strong>{bookedSlot?.start}</strong> has been received.
+                </p>
+                <Alert variant="warning" className="mb-4">
+                  <FaExclamationTriangle className="me-2" />
+                  <strong>Pending Approval:</strong> The calendar owner needs to approve your booking. 
+                  You'll receive a confirmation email once approved.
+                </Alert>
+                <p className="text-muted mb-4">
+                  A confirmation email has been sent to <strong>{bookingForm.guestEmail}</strong>.
+                </p>
+                <div className="d-flex gap-3 justify-content-center">
+                  <Button 
+                    variant="primary" 
+                    onClick={handleNewBooking}
+                    size="lg"
+                  >
+                    Book Another Meeting
+                  </Button>
+                  <Button 
+                    variant="outline-secondary" 
+                    onClick={() => navigate("/")}
+                    size="lg"
+                  >
+                    Return Home
+                  </Button>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    );
   }
 
   return (
@@ -511,6 +444,14 @@ const BookingPage = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Show error alert but still show the form if we have userProfile */}
+      {error && (
+        <Alert variant="warning" className="mb-4">
+          <FaExclamationTriangle className="me-2" />
+          {error} You can still try to book an appointment.
+        </Alert>
+      )}
 
       <Row className="g-4">
         {/* Date and Time Selection */}

@@ -11,7 +11,7 @@ const EMAILJS_CONFIG = {
 };
 
 // Initialize EmailJS
-if (EMAILJS_CONFIG.publicKey && EMAILJS_CONFIG.publicKey !== 'your_public_key_here') {
+if (EMAILJS_CONFIG.publicKey && EMAILJS_CONFIG.publicKey !== 'F_TZefJXRm6XDqVO1') {
   emailjs.init(EMAILJS_CONFIG.publicKey);
 } else {
   console.warn('⚠️ EmailJS not configured - using fallback email logging');
@@ -20,7 +20,7 @@ if (EMAILJS_CONFIG.publicKey && EMAILJS_CONFIG.publicKey !== 'your_public_key_he
 // Enhanced email sending with better error handling
 const sendEmailJS = async (templateId, templateParams) => {
   // Check if EmailJS is properly configured
-  if (!EMAILJS_CONFIG.publicKey || EMAILJS_CONFIG.publicKey === 'your_public_key_here') {
+  if (!EMAILJS_CONFIG.publicKey || EMAILJS_CONFIG.publicKey === 'F_TZefJXRm6XDqVO1') {
     throw new Error('EmailJS not configured. Please set up your EmailJS credentials.');
   }
 

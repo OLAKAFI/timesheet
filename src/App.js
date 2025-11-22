@@ -22,6 +22,7 @@ import LandingPage from "./Pages/LandingPage";
 import AppointmentScheduler from "./Pages/AppointmentScheduler";
 import ScrollToTopWrapper from "./Components/ScrollToTopWrapper";
 import BookingPage from "./Pages/BookingPage";
+import BookingPageFallback from "./Pages/BookingPageFallback";
 
 
 
@@ -56,7 +57,10 @@ function App() {
               <Route path="/coming" element={<ComingSoon />} />
               // In your App.js or routing file
               <Route path="/dashboard/appointments" element={<AppointmentScheduler />} />
+
+              {/* Booking Routes - Critical for external access */}
               <Route path="/book/:userId" element={<BookingPage />} />
+              <Route path="/book" element={<BookingPageFallback />} /> {/* Add fallback */}
               {/* <Route path="/rota" element={<StaffSchedule/>} /> */}
 
         
