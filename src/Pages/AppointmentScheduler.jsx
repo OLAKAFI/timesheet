@@ -784,7 +784,7 @@ useEffect(() => {
     }));
   };
 
-  // 
+  //
   // Generate booking link
   const generateBookingLink = () => {
     if (process.env.NODE_ENV === 'production') {

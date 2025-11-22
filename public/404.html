@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Redirecting...</title>
+    <script>
+      // Redirect to main page and let React Router handle the routing
+      sessionStorage.redirect = location.href;
+      location.replace('/');
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <h1>Redirecting...</h1>
+    <p>If you are not redirected, <a href="/">click here</a>.</p>
+  </body>
+</html>

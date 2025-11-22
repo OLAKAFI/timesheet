@@ -28,6 +28,20 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>ShiftRoom</title>
+    <script>
+      // Handle 404s for client-side routing
+      (function() {
+        const currentPath = window.location.pathname;
+        const shouldRedirect = currentPath.includes('/book/') || 
+                              currentPath.includes('/dashboard/') ||
+                              currentPath.includes('/signin');
+        
+        if (shouldRedirect && !window.location.href.includes('/#')) {
+          window.history.replaceState(null, null, '/#' + currentPath);
+          window.location.reload();
+        }
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
