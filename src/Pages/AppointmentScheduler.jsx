@@ -786,9 +786,16 @@ useEffect(() => {
 
   // Generate booking link
   const generateBookingLink = () => {
-    const baseUrl = window.location.origin;
-    return `${baseUrl}/book/${user?.uid || 'user'}`;
+    // For production, use absolute URLs
+    if (process.env.NODE_ENV === 'production') {
+      return `https://shiftroom.co.uk/book/${user?.uid || 'user'}`;
+    } else {
+      // For development
+      const baseUrl = window.location.origin;
+      return `${baseUrl}/book/${user?.uid || 'user'}`;
+    }
   };
+
 
   // Copy booking link to clipboard
   const handleCopyBookingLink = async () => {
