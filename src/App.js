@@ -1,5 +1,5 @@
 import React from "react";
-import { HashRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import './App.css';
 import Form from './Pages/Form';
 import { useState } from 'react';
@@ -42,7 +42,7 @@ function App() {
 
 
   return (
-    <Router>
+    <Router basename="/">
       <ScrollToTopWrapper>
         <NavigationBar isAuthenticated={isAuthenticated} setAuthenticated={setAuthenticated} />
         <AuthProvider>
