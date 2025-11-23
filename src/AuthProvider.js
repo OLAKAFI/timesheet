@@ -1,9 +1,9 @@
 // // AuthProvider.js
-// import React, { createContext, useState, useEffect, useContext } from "react";
-// import { auth } from "./firebaseConfig";
-// import { onAuthStateChanged } from "firebase/auth";
+import React, { createContext, useState, useEffect, useContext } from "react";
+import { auth } from "./firebaseConfig";
+import { onAuthStateChanged } from "firebase/auth";
 
-// const AuthContext = createContext();
+const AuthContext = createContext();
 
 // export const AuthProvider = ({ children }) => {
 //     const [user, setUser] = useState(null);
@@ -28,7 +28,7 @@
 // export const useAuth = () => useContext(AuthContext);
 
 // In your AuthProvider component
-const AuthProvider = ({ children, requireAuth = true }) => {
+export const AuthProvider = ({ children, requireAuth = true }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
