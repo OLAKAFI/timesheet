@@ -788,10 +788,10 @@ useEffect(() => {
   // Generate booking link
   const generateBookingLink = () => {
     if (process.env.NODE_ENV === 'production') {
-      return `https://shiftroom.co.uk/book/${user?.uid || 'user'}`;
+      return `https://shiftroom.co.uk/#/book/${user?.uid || 'user'}`;
     } else {
       const baseUrl = window.location.origin;
-      return `${baseUrl}/book/${user?.uid || 'user'}`;
+      return `${baseUrl}/#/book/${user?.uid || 'user'}`;
     }
   };
 
