@@ -45,29 +45,39 @@ function App() {
     <Router basename="/">
       <ScrollToTopWrapper>
         <NavigationBar isAuthenticated={isAuthenticated} setAuthenticated={setAuthenticated} />
-        <AuthProvider>
-          <Routes>
-              <Route path="/" element={<LandingPage/>} />
-              <Route path="/signin" element={<SignInSignUp setUsername={setUsername}  />} />
-              <Route path="/dashboard/metrics" element={<MetricsPage />} />
-              <Route path="/dashboard" element={<Dashboard username={username} />} /> 
-              <Route path="/timesheet" element={<Form />} />
-              <Route path="/contact" element={<ContactPage />} />   
-              <Route path="/features" element={<FeaturesPage />} />
-              <Route path="/coming" element={<ComingSoon />} />
-              // In your App.js or routing file
-              <Route path="/dashboard/appointments" element={<AppointmentScheduler />} />
-
-              {/* Booking Routes - Critical for external access */}
-              <Route path="/book/:userId" element={<BookingPage />} />
-              <Route path="/book" element={<BookingPageFallback />} /> {/* Add fallback */}
-              {/* <Route path="/rota" element={<StaffSchedule/>} /> */}
 
         
-            
-
-          </Routes>
-        </AuthProvider>
+        <Routes>
+          {/* Public Routes - No Authentication Required */}
+          {/* Public Booking Routes */}
+          <Route path="/book/:userId" element={
+            <PublicBookingWrapper>
+              <BookingPage />
+            </PublicBookingWrapper>
+          } />
+          <Route path="/book" element={
+            <PublicBookingWrapper>
+              <BookingPageFallback />
+            </PublicBookingWrapper>
+          } />
+          
+          {/* Protected Routes - Inside AuthProvider */}
+          <Route path="*" element={
+            <AuthProvider>
+              <Routes>
+                <Route path="/" element={<LandingPage/>} />
+                <Route path="/signin" element={<SignInSignUp setUsername={setUsername} />} />
+                <Route path="/dashboard/metrics" element={<MetricsPage />} />
+                <Route path="/dashboard" element={<Dashboard username={username} />} /> 
+                <Route path="/timesheet" element={<Form />} />
+                <Route path="/contact" element={<ContactPage />} />   
+                <Route path="/features" element={<FeaturesPage />} />
+                <Route path="/coming" element={<ComingSoon />} />
+                <Route path="/dashboard/appointments" element={<AppointmentScheduler />} />
+              </Routes>
+            </AuthProvider>
+          } />
+        </Routes>
         <Footer />
 
         </ScrollToTopWrapper>
