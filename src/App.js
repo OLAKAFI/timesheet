@@ -26,64 +26,109 @@ import BookingPageFallback from "./Pages/BookingPageFallback";
 
 
 
+// function App() {
+
+//   // Set auth persistence globally (run this once, e.g., in your main app file)
+//   setPersistence(auth, browserLocalPersistence)
+//   .then(() => {
+//       console.log("Auth persistence set to local.");
+//   })
+//   .catch((error) => {
+//       console.error("Error setting auth persistence:", error);
+//   });
+//   const [username, setUsername] = useState(""); // Store the username
+
+//   const [isAuthenticated, setAuthenticated] = useState(false); // Manage auth state
+
+
+//   return (
+//     <Router >
+//       <ScrollToTopWrapper>
+//         <NavigationBar isAuthenticated={isAuthenticated} setAuthenticated={setAuthenticated} />
+//         {/* Public Routes - Outside AuthProvider */}
+//         <Routes>
+//           <Route path="/book/:userId" element={<BookingPage />} />
+//           <Route path="/book" element={<BookingPageFallback />} />
+//           <Route path="/" element={<LandingPage />} />
+//           <Route path="/features" element={<FeaturesPage />} />
+//           <Route path="/contact" element={<ContactPage />} />
+//         </Routes>
+
+//         {/* Protected Routes - Inside AuthProvider */}
+//         <AuthProvider requireAuth={true}>
+//           <Routes>
+//             <Route path="/signin" element={<SignInSignUp setUsername={setUsername} />} />
+//             <Route path="/dashboard" element={<Dashboard username={username} />} />
+//             <Route path="/dashboard/metrics" element={<MetricsPage />} />
+//             <Route path="/dashboard/appointments" element={<AppointmentScheduler />} />
+//             <Route path="/timesheet" element={<Form />} />
+//             <Route path="/coming" element={<ComingSoon />} />
+//           </Routes>
+//         </AuthProvider>
+        
+//         <Footer />
+//       </ScrollToTopWrapper>
+      
+//     </Router>
+
+//   );
+// }
+
+// export default App;
+
 function App() {
-
-  // Set auth persistence globally (run this once, e.g., in your main app file)
-  setPersistence(auth, browserLocalPersistence)
-  .then(() => {
-      console.log("Auth persistence set to local.");
-  })
-  .catch((error) => {
-      console.error("Error setting auth persistence:", error);
-  });
-  const [username, setUsername] = useState(""); // Store the username
-
-  const [isAuthenticated, setAuthenticated] = useState(false); // Manage auth state
-
+  const [username, setUsername] = useState('');
 
   return (
-    <Router basename="/">
-      <ScrollToTopWrapper>
-        <NavigationBar isAuthenticated={isAuthenticated} setAuthenticated={setAuthenticated} />
-
-        
-        <Routes>
-          {/* Public Routes - No Authentication Required */}
-          {/* Public Booking Routes */}
-          <Route path="/book/:userId" element={
-            <PublicBookingWrapper>
-              <BookingPage />
-            </PublicBookingWrapper>
-          } />
-          <Route path="/book" element={
-            <PublicBookingWrapper>
-              <BookingPageFallback />
-            </PublicBookingWrapper>
-          } />
-          
-          {/* Protected Routes - Inside AuthProvider */}
-          <Route path="*" element={
-            <AuthProvider>
-              <Routes>
-                <Route path="/" element={<LandingPage/>} />
-                <Route path="/signin" element={<SignInSignUp setUsername={setUsername} />} />
-                <Route path="/dashboard/metrics" element={<MetricsPage />} />
-                <Route path="/dashboard" element={<Dashboard username={username} />} /> 
-                <Route path="/timesheet" element={<Form />} />
-                <Route path="/contact" element={<ContactPage />} />   
-                <Route path="/features" element={<FeaturesPage />} />
-                <Route path="/coming" element={<ComingSoon />} />
-                <Route path="/dashboard/appointments" element={<AppointmentScheduler />} />
-              </Routes>
-            </AuthProvider>
-          } />
-        </Routes>
-        <Footer />
-
-        </ScrollToTopWrapper>
+    <Router>
+      {/* Public Routes - Outside AuthProvider */}
+      <Routes>
+              {/* PUBLIC ROUTES - NO AuthProvider AT ALL */}
+              <Route path="/book/:userId" element={<BookingPage />} />
+              <Route path="/book" element={<BookingPageFallback />} />
+              
+              {/* OTHER PUBLIC ROUTES */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/features" element={<FeaturesPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              
+              {/* PROTECTED ROUTES - Inside AuthProvider */}
+              <Route path="/signin" element={
+                <AuthProvider requireAuth={false}>
+                  <SignInSignUp setUsername={setUsername} />
+                </AuthProvider>
+              } />
+              
+              {/* All other routes that need auth */}
+              <Route path="/dashboard/*" element={
+                <AuthProvider>
+                  <Dashboard username={username} />
+                </AuthProvider>
+              } />
+              <Route path="/dashboard/metrics" element={
+                <AuthProvider>
+                  <MetricsPage />
+                </AuthProvider>
+              } />
+              <Route path="/dashboard/appointments" element={
+                <AuthProvider>
+                  <AppointmentScheduler />
+                </AuthProvider>
+              } />
+              <Route path="/timesheet" element={
+                <AuthProvider>
+                  <Form />
+                </AuthProvider>
+              } />
+              <Route path="/coming" element={
+                <AuthProvider>
+                  <ComingSoon />
+                </AuthProvider>
+              } />
+      </Routes>
       
+      <Footer />
     </Router>
-
   );
 }
 

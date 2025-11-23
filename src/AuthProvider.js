@@ -1,9 +1,9 @@
 // // AuthProvider.js
-import React, { createContext, useState, useEffect, useContext } from "react";
-import { auth } from "./firebaseConfig";
-import { onAuthStateChanged } from "firebase/auth";
+// import React, { createContext, useState, useEffect, useContext } from "react";
+// import { auth } from "./firebaseConfig";
+// import { onAuthStateChanged } from "firebase/auth";
 
-const AuthContext = createContext();
+// const AuthContext = createContext();
 
 // export const AuthProvider = ({ children }) => {
 //     const [user, setUser] = useState(null);
@@ -27,38 +27,73 @@ const AuthContext = createContext();
 
 // export const useAuth = () => useContext(AuthContext);
 
-// In your AuthProvider component
+// AuthProvider.js
+import React, { createContext, useState, useEffect, useContext } from "react";
+import { auth } from "./firebaseConfig";
+import { onAuthStateChanged } from "firebase/auth";
+import { useNavigate, useLocation } from "react-router-dom";
+
+const AuthContext = createContext();
+
 export const AuthProvider = ({ children, requireAuth = true }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
+    const location = useLocation();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-      
-      // Only redirect if authentication is required
-      if (requireAuth && !user && !loading) {
-        // Don't redirect from booking pages
-        const isBookingPage = window.location.pathname.includes('/book');
-        if (!isBookingPage) {
-          navigate('/signin');
-        }
-      }
-    });
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            setLoading(false);
+            
+            // Only handle redirects if authentication is required
+            if (requireAuth && !currentUser && !loading) {
+                // Check if current route is a booking page - don't redirect from booking pages
+                const isBookingPage = location.pathname.includes('/book');
+                const isPublicRoute = location.pathname === '/' || 
+                                     location.pathname === '/signin' || 
+                                     location.pathname === '/features' ||
+                                     location.pathname === '/contact';
+                
+                // Only redirect if not on a public route and not on booking page
+                if (!isBookingPage && !isPublicRoute) {
+                    console.log("Redirecting to signin from:", location.pathname);
+                    navigate('/signin');
+                }
+            }
+        });
 
-    return () => unsubscribe();
-  }, [requireAuth]);
+        return () => unsubscribe();
+    }, [requireAuth, loading, navigate, location]);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+    // If no authentication required, show children regardless of auth state
+    if (!requireAuth) {
+        return (
+            <AuthContext.Provider value={{ user, loading }}>
+                {children}
+            </AuthContext.Provider>
+        );
+    }
 
-  // If no auth required, show children regardless of auth state
-  if (!requireAuth) {
-    return children;
-  }
+    // Show loading state
+    if (loading) {
+        return (
+            <div className="d-flex justify-content-center align-items-center min-vh-100">
+                <div className="text-center">
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p className="mt-2">Loading...</p>
+                </div>
+            </div>
+        );
+    }
 
-  // If auth required, only show children when user is authenticated
-  return user ? children : <Navigate to="/signin" replace />;
+    return (
+        <AuthContext.Provider value={{ user, loading }}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
+
+export const useAuth = () => useContext(AuthContext);
