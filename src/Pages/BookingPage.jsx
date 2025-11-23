@@ -7,29 +7,33 @@ import {
   Card, 
   Button, 
   Alert,
-  Spinner
+  Spinner,
+  Badge
 } from "react-bootstrap";
+import "bootstrap/dist/css/bootstrap.min.css";
 import { 
   FaCalendarAlt, 
   FaClock, 
   FaUser,
   FaEnvelope,
+  FaVideo, 
+  FaMapMarkerAlt,
   FaCheckCircle,
   FaArrowLeft,
   FaExclamationTriangle,
   FaUserClock
 } from "react-icons/fa";
 
-// Firebase imports - but no auth
+// Firebase imports - only Firestore, no auth
 import { 
   collection, 
   addDoc, 
+  onSnapshot, 
   query, 
   where,
   orderBy,
   doc,
-  getDoc,
-  onSnapshot
+  getDoc
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { useParams, useNavigate } from "react-router-dom";
@@ -38,7 +42,14 @@ const BookingPage = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
   
-  // State management - no auth state
+  // Debug logging
+  useEffect(() => {
+    console.log("🎯 BookingPage mounted - Public Mode");
+    console.log("📍 User ID from URL:", userId);
+    console.log("🔗 Current URL:", window.location.href);
+  }, [userId]);
+
+  // State management - no auth dependencies
   const [userProfile, setUserProfile] = useState(null);
   const [availableSlots, setAvailableSlots] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -48,36 +59,64 @@ const BookingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [error, setError] = useState(null);
-
+  const [bookedSlot, setBookedSlot] = useState(null);
+  
+  // Booking form state
   const [bookingForm, setBookingForm] = useState({
     guestName: "",
     guestEmail: "",
     notes: ""
   });
 
-  // Load data without authentication
+  // Security validation
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const sanitizeInput = (input) => {
+    if (typeof input !== 'string') return input;
+    return input
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;');
+  };
+
+  // Load user profile and availability - NO AUTH REQUIRED
   useEffect(() => {
     const loadUserData = async () => {
+      console.log("🔄 Loading data for user:", userId);
+      
       if (!userId) {
-        setError("Invalid booking link");
+        const errorMsg = "Invalid booking link: No user ID provided";
+        console.error(errorMsg);
+        setError(errorMsg);
         setIsLoading(false);
         return;
       }
 
       try {
-        // Load user profile
+        // Load user profile from Firestore
+        console.log("📖 Loading user profile...");
         const userProfileRef = doc(db, "userProfiles", userId);
         const userProfileSnap = await getDoc(userProfileRef);
         
         if (userProfileSnap.exists()) {
-          setUserProfile(userProfileSnap.data());
+          const profileData = userProfileSnap.data();
+          console.log("✅ User profile loaded:", profileData.name);
+          setUserProfile(profileData);
         } else {
-          setError("Calendar owner not found");
+          const errorMsg = "Calendar owner not found. Please check the booking link.";
+          console.error(errorMsg);
+          setError(errorMsg);
           setIsLoading(false);
           return;
         }
 
-        // Load appointments without auth dependency
+        // Load existing appointments for this user
+        console.log("📅 Loading appointments...");
         const today = new Date().toISOString().split('T')[0];
         const futureDate = new Date();
         futureDate.setDate(futureDate.getDate() + 30);
@@ -98,11 +137,13 @@ const BookingPage = () => {
             querySnapshot.forEach((doc) => {
               appointmentsData.push({ id: doc.id, ...doc.data() });
             });
+            console.log("✅ Appointments loaded:", appointmentsData.length);
             setAppointments(appointmentsData);
             setIsLoading(false);
           },
           (error) => {
-            console.error("Error loading appointments:", error);
+            console.error("❌ Error loading appointments:", error);
+            // Don't block the form if appointments fail to load
             setAppointments([]);
             setIsLoading(false);
           }
@@ -110,8 +151,8 @@ const BookingPage = () => {
 
         return () => unsubscribe();
       } catch (error) {
-        console.error("Error:", error);
-        setError("Failed to load booking page");
+        console.error("❌ Error loading user data:", error);
+        setError("Failed to load booking page. Please check the link and try again.");
         setIsLoading(false);
       }
     };
@@ -119,16 +160,108 @@ const BookingPage = () => {
     loadUserData();
   }, [userId]);
 
-  // Generate available slots (keep your existing function)
+  // Helper functions for time conversion
+  const timeToMinutes = (timeStr) => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  const minutesToTime = (minutes) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  };
+
+  // Generate available time slots for selected date
   const generateAvailableSlots = useCallback(() => {
     if (!userProfile) return [];
-    // ... your existing slot generation logic ...
+
+    const slots = [];
+    const dateStr = selectedDate;
+    
+    // Get existing appointments for selected date
+    const dayAppointments = appointments.filter(apt => apt.date === dateStr);
+    
+    // Use default working hours if userProfile doesn't have them
+    const workStart = timeToMinutes(userProfile.workingHours?.start || "09:00");
+    const workEnd = timeToMinutes(userProfile.workingHours?.end || "17:00");
+    const slotDuration = userProfile.defaultDuration || 60;
+    
+    // Generate slots from working hours (every 30 minutes)
+    for (let time = workStart; time <= workEnd - slotDuration; time += 30) {
+      const slotStart = minutesToTime(time);
+      const slotEnd = minutesToTime(time + slotDuration);
+      
+      // Check if this slot conflicts with existing appointments
+      const hasConflict = dayAppointments.some(appointment => {
+        const aptStart = timeToMinutes(appointment.startTime);
+        const aptEnd = timeToMinutes(appointment.endTime);
+        return time < aptEnd && (time + slotDuration) > aptStart;
+      });
+      
+      if (!hasConflict) {
+        // Only show slots in the future
+        const slotDateTime = new Date(`${selectedDate}T${slotStart}`);
+        if (slotDateTime > new Date()) {
+          slots.push({
+            start: slotStart,
+            end: slotEnd,
+            display: `${slotStart} - ${slotEnd}`
+          });
+        }
+      }
+    }
+    
+    return slots;
   }, [selectedDate, appointments, userProfile]);
 
-  // Handle booking submission
+  // Update available slots when dependencies change
+  useEffect(() => {
+    const slots = generateAvailableSlots();
+    setAvailableSlots(slots);
+    setSelectedSlot(null);
+  }, [generateAvailableSlots]);
+
+  // Handle booking form changes
+  const handleBookingChange = (field, value) => {
+    setBookingForm(prev => ({
+      ...prev,
+      [field]: sanitizeInput(value)
+    }));
+  };
+
+  // Handle slot selection
+  const handleSlotSelect = (slot) => {
+    setSelectedSlot(slot);
+  };
+
+  // Submit booking - NO AUTH REQUIRED
   const handleSubmitBooking = async () => {
-    if (!bookingForm.guestName || !bookingForm.guestEmail || !selectedSlot) {
-      alert("Please fill all required fields");
+    // Validation
+    if (!bookingForm.guestName.trim()) {
+      alert("Please enter your name");
+      return;
+    }
+
+    if (!validateEmail(bookingForm.guestEmail)) {
+      alert("Please enter a valid email address");
+      return;
+    }
+
+    if (!selectedSlot) {
+      alert("Please select a time slot");
+      return;
+    }
+
+    // Check if slot is still available (prevent double-booking)
+    const currentSlots = generateAvailableSlots();
+    const isSlotStillAvailable = currentSlots.some(slot => 
+      slot.start === selectedSlot.start && slot.end === selectedSlot.end
+    );
+
+    if (!isSlotStillAvailable) {
+      alert("Sorry, this time slot is no longer available. Please select another time.");
+      setSelectedSlot(null);
       return;
     }
 
@@ -136,8 +269,8 @@ const BookingPage = () => {
 
     try {
       const bookingData = {
-        title: `Meeting with ${bookingForm.guestName}`,
-        description: bookingForm.notes || "",
+        title: `Meeting with ${sanitizeInput(bookingForm.guestName)}`,
+        description: sanitizeInput(bookingForm.notes) || "",
         date: selectedDate,
         startTime: selectedSlot.start,
         endTime: selectedSlot.end,
@@ -146,7 +279,7 @@ const BookingPage = () => {
         meetingType: "in-person",
         color: "#006D7D",
         userId: userId,
-        guestName: bookingForm.guestName,
+        guestName: sanitizeInput(bookingForm.guestName),
         guestEmail: bookingForm.guestEmail,
         isBooking: true,
         status: "pending",
@@ -157,12 +290,28 @@ const BookingPage = () => {
         approved: false
       };
 
-      await addDoc(collection(db, "appointments"), bookingData);
+      console.log("📝 Creating booking:", bookingData);
+      
+      // Save to Firestore - public write allowed by Firestore rules
+      const docRef = await addDoc(collection(db, "appointments"), bookingData);
+      console.log("✅ Booking created with ID:", docRef.id);
+      
+      // Store the booked slot for the success page
+      setBookedSlot(selectedSlot);
       setBookingSuccess(true);
       
     } catch (error) {
-      console.error("Booking error:", error);
-      alert("Error creating booking. Please try again.");
+      console.error("❌ Error creating booking:", error);
+      console.error("Error details:", error.code, error.message);
+      
+      // More specific error messages
+      if (error.code === 'permission-denied') {
+        alert("Permission denied. Please check if the booking link is valid.");
+      } else if (error.code === 'invalid-argument') {
+        alert("Invalid data. Please check your information and try again.");
+      } else {
+        alert("Error creating booking. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -187,6 +336,11 @@ const BookingPage = () => {
         <div className="text-center">
           <Spinner animation="border" variant="primary" size="lg" />
           <p className="mt-3">Loading booking page...</p>
+          <div style={{ background: '#f8f9fa', padding: '10px', borderRadius: '5px', marginTop: '20px' }}>
+            <small className="text-muted">
+              <strong>Debug Info:</strong> UserId: {userId || 'NOT FOUND'} | Public Mode
+            </small>
+          </div>
         </div>
       </Container>
     );
@@ -203,6 +357,21 @@ const BookingPage = () => {
                 <FaExclamationTriangle size={64} className="text-danger mb-4" />
                 <h2 className="mb-3">Unable to Load Booking Page</h2>
                 <p className="text-muted mb-4">{error}</p>
+                
+                {/* Debug information */}
+                <Card className="bg-light border-0 mb-4">
+                  <Card.Body className="text-start">
+                    <h6>Debug Information:</h6>
+                    <ul className="small">
+                      <li>User ID from URL: <code>{userId || 'NOT FOUND'}</code></li>
+                      <li>Current Path: <code>{window.location.pathname}</code></li>
+                      <li>Full URL: <code>{window.location.href}</code></li>
+                      <li>User Profile Loaded: {userProfile ? 'Yes' : 'No'}</li>
+                      <li>Running in: <strong>PUBLIC MODE</strong></li>
+                    </ul>
+                  </Card.Body>
+                </Card>
+                
                 <div className="d-flex gap-3 justify-content-center">
                   <Button 
                     variant="primary" 
@@ -292,6 +461,9 @@ const BookingPage = () => {
               <p className="mb-0 opacity-90">
                 Schedule a meeting with {userProfile?.name || 'the calendar owner'}
               </p>
+              <Badge bg="light" text="dark" className="mt-2">
+                Public Booking Link
+              </Badge>
             </Card.Body>
           </Card>
         </Col>
