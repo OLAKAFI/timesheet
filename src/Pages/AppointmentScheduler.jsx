@@ -55,7 +55,8 @@ import {
   onSnapshot, 
   query, 
   where,
-  orderBy 
+  orderBy,
+  getDocs 
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { useAuth } from "../AuthProvider";
@@ -639,30 +640,62 @@ const AppointmentScheduler = () => {
 
     setIsSaving(true);
 
+    // try {
+    //   const appointmentData = {
+    //     ...sanitizedForm,
+    //     userId: user.uid,
+    //     createdAt: new Date(),
+    //     updatedAt: new Date()
+    //   };
+
+    //   if (editingAppointment) {
+    //     await updateDoc(doc(db, "appointments", editingAppointment.id), appointmentData);
+    //     setAppointments(prev => prev.map(apt => 
+    //       apt.id === editingAppointment.id 
+    //         ? { ...apt, ...appointmentData }
+    //         : apt
+    //     ));
+    //   } else {
+    //     const result = await addDoc(collection(db, "appointments"), appointmentData);
+    //     const newAppointment = { 
+    //       id: result.id, 
+    //       ...appointmentData 
+    //     };
+    //     setAppointments(prev => [...prev, newAppointment]);
+    //   }
+
+    //   setShowAppointmentModal(false);
+    //   setShowConflictModal(false);
+    //   resetAppointmentForm();
+      
+    // } catch (error) {
+    //   console.error("Error saving appointment:", error);
+    //   alert("Error saving appointment. Please try again.");
+    // } finally {
+    //   setIsSaving(false);
+    //   setPendingAppointment(null);
+    // }
+
+    // Duplicate appointment fix: Move setAppointments inside try-catchf
     try {
       const appointmentData = {
         ...sanitizedForm,
         userId: user.uid,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        // Add these fields to prevent booking duplication
+        synced: false // Add sync flag
       };
 
       if (editingAppointment) {
         await updateDoc(doc(db, "appointments", editingAppointment.id), appointmentData);
-        setAppointments(prev => prev.map(apt => 
-          apt.id === editingAppointment.id 
-            ? { ...apt, ...appointmentData }
-            : apt
-        ));
+        // REMOVED: setAppointments update here
       } else {
         const result = await addDoc(collection(db, "appointments"), appointmentData);
-        const newAppointment = { 
-          id: result.id, 
-          ...appointmentData 
-        };
-        setAppointments(prev => [...prev, newAppointment]);
+        // REMOVED: setAppointments update here
       }
 
+      // Reset form and close modals
       setShowAppointmentModal(false);
       setShowConflictModal(false);
       resetAppointmentForm();
@@ -670,10 +703,24 @@ const AppointmentScheduler = () => {
     } catch (error) {
       console.error("Error saving appointment:", error);
       alert("Error saving appointment. Please try again.");
+      // Restore appointments from Firestore on error
+      const q = query(
+        collection(db, "appointments"),
+        where("userId", "==", user.uid),
+        orderBy("date", "asc"),
+        orderBy("startTime", "asc")
+      );
+      const querySnapshot = await getDocs(q);
+      const appointmentsData = [];
+      querySnapshot.forEach((doc) => {
+        appointmentsData.push({ id: doc.id, ...doc.data() });
+      });
+      setAppointments(appointmentsData);
     } finally {
       setIsSaving(false);
       setPendingAppointment(null);
     }
+
   };
 
   // Handle conflict resolution
@@ -713,7 +760,7 @@ const AppointmentScheduler = () => {
   const handleDeleteAppointment = async (appointmentId) => {
     if (window.confirm("Are you sure you want to delete this appointment?")) {
       try {
-        setAppointments(prev => prev.filter(apt => apt.id !== appointmentId));
+        // REMOVED: setAppointments update here
         await deleteDoc(doc(db, "appointments", appointmentId));
       } catch (error) {
         console.error("Error deleting appointment:", error);
