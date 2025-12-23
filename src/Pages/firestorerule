@@ -1,0 +1,39 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Appointments rules
+    match /appointments/{appointmentId} {
+      // Allow authenticated owners to read/write their appointments
+      allow read, write: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
+      
+      // Allow owners to create appointments
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.userId;
+      
+      // Allow public to create booking appointments (external users)
+      allow create: if request.auth == null
+        && request.resource.data.isBooking == true
+        && request.resource.data.userId != null
+        && request.resource.data.status == "pending";
+      
+      // Allow public to read their own pending bookings (for confirmation)
+      allow read: if request.auth == null 
+        && resource.data.isBooking == true 
+        && resource.data.status == "pending"
+        && resource.data.guestEmail == request.query.email; // Optional: additional security
+    }
+
+    // User inputs - for authenticated users only
+    match /userInputs/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // User profiles - allow public read for booking pages
+    match /userProfiles/{userId} {
+      allow read: if true; // Public can read
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
