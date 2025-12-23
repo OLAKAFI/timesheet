@@ -6,7 +6,17 @@ import { FaSignOutAlt, FaClock, FaMoneyBillWave, FaCalendarAlt, FaArrowRight, Fa
 import "../style/form.css";
 
 // for savetofirebase
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { 
+  doc, 
+  setDoc, 
+  getDoc, 
+  collection, 
+  addDoc, 
+  query, 
+  where, 
+  getDocs,
+  deleteDoc 
+} from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
 import { signOut } from "firebase/auth";
 
@@ -14,6 +24,9 @@ import { signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { useAuth } from "../AuthProvider";
+
+
+
 
 const Form = () => {
   const { user, loading } = useAuth();
@@ -32,6 +45,7 @@ const Form = () => {
   const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const workingDaysInWeek = 5;
   const [authenticated, setAuthenticated] = useState(true);
+  
 
   // NHS Specific State
   const [nhsBand, setNhsBand] = useState("5");
@@ -67,6 +81,58 @@ const Form = () => {
     '7': [43742, 45265, 46874, 48546, 50256],
     '8a': [50952, 52789, 54638, 56504, 58349]
   };
+
+
+  // ADDED FUNCTIONS
+  // Add this function to sync shifts (simplified version)
+  const syncShiftsToFirestore = async () => {
+    if (!user) return;
+
+    try {
+      const shiftsCollection = collection(db, "shifts");
+      
+      // Delete existing shifts for this user to prevent duplicates
+      const q = query(shiftsCollection, where("userId", "==", user.uid));
+      const querySnapshot = await getDocs(q);
+      const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+      await Promise.all(deletePromises);
+      
+      // Add new shifts only for days with valid times
+      const shiftsToAdd = days
+        .filter(day => day.timeStart && day.timeEnd && day.timeDifference && parseFloat(day.timeDifference) > 0)
+        .map(day => {
+          const dateKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day.day).padStart(2, '0')}`;
+          
+          return {
+            userId: user.uid,
+            date: dateKey,
+            startTime: day.timeStart,
+            endTime: day.timeEnd,
+            duration: parseFloat(day.timeDifference),
+            year: selectedYear,
+            month: selectedMonth + 1,
+            day: day.day,
+            weekday: day.weekday,
+            company: company,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            isShift: true
+          };
+        });
+
+      // Add all shifts in batch
+      const addPromises = shiftsToAdd.map(shift => addDoc(shiftsCollection, shift));
+      
+      if (addPromises.length > 0) {
+        await Promise.all(addPromises);
+        console.log(`✅ Synced ${shiftsToAdd.length} shifts to Firestore`);
+      }
+      
+    } catch (error) {
+      console.error("❌ Error syncing shifts:", error);
+    }
+  };
+
 
   // Determine calculation modes
   const isNHS = company === "NHS";
@@ -353,7 +419,98 @@ const Form = () => {
 
   // ==================== EXISTING HELPER FUNCTIONS ====================
 
+  // Add helper function to generate days from shifts
+  const generateDaysFromShifts = (shifts) => {
+    const numDays = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+    
+    const previousMonthLastDate = new Date(selectedYear, selectedMonth, 0);
+    const previousMonthLastDay = previousMonthLastDate.getDay();
+    
+    const startingDayIndex = (previousMonthLastDay + 1) % 7;
+    
+    const newDays = Array.from({ length: numDays }, (_, index) => {
+      const weekdayIndex = (startingDayIndex + index) % 7;
+      const dayName = daysOfWeek[weekdayIndex];
+      const dayNumber = index + 1;
+      const dateKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+      const shift = shifts[dateKey];
+
+      return {
+        day: dayNumber,
+        weekday: dayName,
+        timeStart: shift ? shift.startTime : "",
+        timeEnd: shift ? shift.endTime : "",
+        timeDifference: shift ? shift.duration.toString() : "",
+      };
+    });
+    
+    console.log("Generated days from existing shifts:", newDays.filter(d => d.timeStart));
+    return newDays;
+  };
+
   // Initialize Data
+  // const initializeData = async () => {
+  //   console.log("Initializing data for:", selectedMonth + 1, selectedYear);
+    
+  //   if (!user) {
+  //     console.warn("No authenticated user. Skipping initialization.");
+  //     return;
+  //   }
+    
+  //   setIsInitializing(true);
+    
+  //   const firestoreData = await loadFromFirestore(selectedMonth, selectedYear);
+  //   const userDocRef = doc(db, "userInputs", user.uid);
+
+  //   try {
+  //     const userDoc = await getDoc(userDocRef);
+  //     if (userDoc.exists()) {
+  //       const savedData = userDoc.data();
+        
+  //       // Load contract hours
+  //       if (savedData.contractHours !== undefined) {
+  //         setContractHours(savedData.contractHours);
+  //       }
+        
+  //       // Load company and related data
+  //       if (savedData.company) {
+  //         setCompany(savedData.company);
+          
+  //         // Load NHS specific data if company is NHS
+  //         if (savedData.company === "NHS") {
+  //           if (savedData.nhsBand) setNhsBand(savedData.nhsBand);
+  //           if (savedData.nhsStep) setNhsStep(savedData.nhsStep);
+  //           if (savedData.nhsEmploymentType) setNhsEmploymentType(savedData.nhsEmploymentType);
+  //           if (savedData.nhsWeeklyHours) setNhsWeeklyHours(savedData.nhsWeeklyHours);
+  //           if (savedData.nhsEnhancements) setNhsEnhancements(savedData.nhsEnhancements);
+  //         }
+  //       }
+        
+  //       // Load contract type
+  //       if (savedData.contractType) {
+  //         setContractType(savedData.contractType);
+  //       }
+        
+  //       // Load hourly rate
+  //       if (savedData.hourlyRate !== undefined) {
+  //         setHourlyRate(savedData.hourlyRate);
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("Error loading data:", error);
+  //   }
+
+  //   if (firestoreData) {
+  //     setDays(firestoreData.days || []);
+  //     setCarryForward(firestoreData.carryForward || 0);
+  //   } else {
+  //     generateDays(selectedMonth, selectedYear);
+  //   }
+
+  //   setIsInitializing(false);
+  // };
+
+  // Update the initializeData function to load existing shifts
   const initializeData = async () => {
     console.log("Initializing data for:", selectedMonth + 1, selectedYear);
     
@@ -409,11 +566,21 @@ const Form = () => {
       setDays(firestoreData.days || []);
       setCarryForward(firestoreData.carryForward || 0);
     } else {
-      generateDays(selectedMonth, selectedYear);
+      // Try to load shifts and populate days
+      const existingShifts = await loadExistingShifts();
+      if (Object.keys(existingShifts).length > 0) {
+        const generatedDays = generateDaysFromShifts(existingShifts);
+        setDays(generatedDays);
+      } else {
+        generateDays(selectedMonth, selectedYear);
+      }
     }
 
     setIsInitializing(false);
   };
+
+
+
 
   // Load From Firestore
   const loadFromFirestore = async (month, year) => {
@@ -478,6 +645,43 @@ const Form = () => {
   };
 
   // Save to Firestore
+  // const saveToFirestore = async () => {
+  //   if (!user || isInitializing) {
+  //     console.warn("No authenticated user. Cannot save data.");
+  //     return;
+  //   }
+
+  //   const key = `user-data-${selectedYear}-${selectedMonth + 1}`;
+  //   const userDocRef = doc(db, "userInputs", user.uid);
+    
+  //   const updatedData = {
+  //     [key]: { 
+  //       days, 
+  //       carryForward 
+  //     },
+  //     company: company || "My Company",
+  //     contractType: contractType || "Contract",
+  //     contractHours: contractHours || 0,
+  //     hourlyRate: hourlyRate || 12.60,
+  //   };
+
+  //   if (company === "NHS") {
+  //     updatedData.nhsBand = nhsBand;
+  //     updatedData.nhsStep = nhsStep;
+  //     updatedData.nhsEmploymentType = nhsEmploymentType;
+  //     updatedData.nhsWeeklyHours = nhsWeeklyHours;
+  //     updatedData.nhsEnhancements = nhsEnhancements;
+  //   }
+
+  //   try {
+  //     await setDoc(userDocRef, updatedData, { merge: true });
+  //     console.log("✅ Data successfully updated in Firestore");
+  //   } catch (error) {
+  //     console.error("❌ Error saving data to Firestore:", error);
+  //   }
+  // };
+
+  // Update the saveToFirestore function to include shift sync
   const saveToFirestore = async () => {
     if (!user || isInitializing) {
       console.warn("No authenticated user. Cannot save data.");
@@ -496,6 +700,7 @@ const Form = () => {
       contractType: contractType || "Contract",
       contractHours: contractHours || 0,
       hourlyRate: hourlyRate || 12.60,
+      lastSync: new Date().toISOString()
     };
 
     if (company === "NHS") {
@@ -509,10 +714,64 @@ const Form = () => {
     try {
       await setDoc(userDocRef, updatedData, { merge: true });
       console.log("✅ Data successfully updated in Firestore");
+      
+      // Sync shifts after saving data
+      await syncShiftsToFirestore();
     } catch (error) {
       console.error("❌ Error saving data to Firestore:", error);
     }
   };
+
+
+  // Add this useEffect to auto-sync shifts when days change
+  useEffect(() => {
+    if (!user || isInitializing) return;
+    
+    // Only sync if there are days with time entries
+    const hasTimeEntries = days.some(day => day.timeStart && day.timeEnd);
+    if (!hasTimeEntries) return;
+    
+    const debouncedSync = setTimeout(() => {
+      syncShiftsToFirestore();
+    }, 3000); // Longer delay to avoid excessive writes
+    
+    return () => clearTimeout(debouncedSync);
+  }, [days, user]);
+
+
+  // Add this function to load existing shifts
+  const loadExistingShifts = async () => {
+    if (!user) return;
+    
+    try {
+      const shiftsCollection = collection(db, "shifts");
+      const q = query(
+        shiftsCollection,
+        where("userId", "==", user.uid),
+        where("year", "==", selectedYear),
+        where("month", "==", selectedMonth + 1)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const existingShifts = {};
+      
+      querySnapshot.forEach(doc => {
+        const shift = doc.data();
+        existingShifts[`${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(shift.day).padStart(2, '0')}`] = shift;
+      });
+      
+      console.log(`📊 Loaded ${Object.keys(existingShifts).length} existing shifts`);
+      return existingShifts;
+    } catch (error) {
+      console.error("❌ Error loading shifts:", error);
+      return {};
+    }
+  };
+
+
+
+
+
 
   // Load Carry Forward
   const loadCarryForward = (month, year) => {
