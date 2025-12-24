@@ -11,7 +11,10 @@ import {
   Alert,
   ListGroup,
   Offcanvas,
-  Collapse
+  Collapse,
+  FormGroup,
+  FormLabel,
+  FormControl
 } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { 
@@ -40,8 +43,9 @@ import {
   FaChevronUp,
   FaExpand,
   FaCompress,
+  FaExclamationTriangle,
   FaHospital,
-  FaExclamationTriangle
+  FaBuilding
 } from "react-icons/fa";
 
 // Firebase imports
@@ -64,10 +68,6 @@ import { useAuth } from "../AuthProvider";
 import { useNavigate } from "react-router-dom";
 
 import { sendBookingApprovalEmail } from '../emailService';
-
-
-
-
 
 // Security utility functions
 const securityUtils = {
@@ -109,9 +109,6 @@ const securityUtils = {
   }
 };
 
-
-
-
 // FIXED: Memoized Appointment Modal Component
 const AppointmentModal = React.memo(({ 
   showAppointmentModal, 
@@ -124,18 +121,11 @@ const AppointmentModal = React.memo(({
   editingAppointment, 
   setShowAppointmentModal, 
   resetAppointmentForm,
-  handleDeleteAppointment 
+  handleDeleteAppointment,
+  availableTimeSlots,
+  dateHasShifts
 }) => {
   const form = appointmentForm;
-
-  
-  const [shifts, setShifts] = useState([]);
-
-  // Add this function to check if date has shifts *
-  const dateHasShifts = (dateString) => {
-    return shifts.some(shift => shift.date === dateString);
-  };
-
 
   // Security: Safe change handler
   const handleSafeChange = (field, value) => {
@@ -192,8 +182,6 @@ const AppointmentModal = React.memo(({
 
   if (!showAppointmentModal) return null;
 
-  
-
   return (
     <Modal 
       show={showAppointmentModal} 
@@ -211,6 +199,22 @@ const AppointmentModal = React.memo(({
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
+        {/* Shift Warning */}
+        {dateHasShifts && (
+          <Alert variant="info" className="mb-3">
+            <FaClock className="me-2" />
+            <strong>Work Shift Day:</strong> You have work shifts scheduled on this date. 
+            Please schedule appointments around your work hours.
+            {availableTimeSlots.length > 0 && (
+              <div className="mt-2 small">
+                <strong>Suggested times:</strong> {availableTimeSlots.map(slot => 
+                  `${slot.start}-${slot.end}`
+                ).join(', ')}
+              </div>
+            )}
+          </Alert>
+        )}
+
         <Row>
           <Col md={6}>
             <BootstrapForm.Group className="mb-3">
@@ -273,19 +277,7 @@ const AppointmentModal = React.memo(({
                 min={new Date().toISOString().split('T')[0]}
               />
             </BootstrapForm.Group>
-            
           </Col>
-
-          
-          {dateHasShifts(appointmentForm.date) && (
-            <Alert variant="info" className="mt-2 p-2 small">
-              <FaClock className="me-2" />
-              <strong>Note:</strong> You have work shifts scheduled on this date. 
-              Available times will be automatically blocked.
-            </Alert>
-          )}
-
-          
           <Col md={3}>
             <BootstrapForm.Group className="mb-3">
               <BootstrapForm.Label htmlFor="appointment-start-time" className="fw-medium">
@@ -297,6 +289,7 @@ const AppointmentModal = React.memo(({
                 value={form.startTime}
                 onChange={(e) => handleSafeChange('startTime', e.target.value)}
                 aria-required="true"
+                step="900" // 15 minute increments
               />
             </BootstrapForm.Group>
           </Col>
@@ -311,6 +304,7 @@ const AppointmentModal = React.memo(({
                 value={form.endTime}
                 onChange={(e) => handleSafeChange('endTime', e.target.value)}
                 aria-required="true"
+                step="900" // 15 minute increments
               />
             </BootstrapForm.Group>
           </Col>
@@ -473,8 +467,6 @@ const AppointmentModal = React.memo(({
   );
 });
 
-
-
 const AppointmentScheduler = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -482,6 +474,7 @@ const AppointmentScheduler = () => {
   // State management
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [appointments, setAppointments] = useState([]);
+  const [shifts, setShifts] = useState([]);
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [showDayViewModal, setShowDayViewModal] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
@@ -498,24 +491,17 @@ const AppointmentScheduler = () => {
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [conflictingAppointments, setConflictingAppointments] = useState([]);
   const [pendingAppointment, setPendingAppointment] = useState(null);
-
-  // Add new state variables
-  const [shifts, setShifts] = useState([]);
-  const [isLoadingShifts, setIsLoadingShifts] = useState(false);
-  const [shiftConflicts, setShiftConflicts] = useState([]);
   const [showShiftConflictModal, setShowShiftConflictModal] = useState(false);
   const [shiftConflictDetails, setShiftConflictDetails] = useState([]);
-
-
-
+  const [shiftOverride, setShiftOverride] = useState(false);
 
   // FIXED: Use state for form to prevent flashing and improve performance
   const [appointmentForm, setAppointmentForm] = useState({
     title: "",
     description: "",
     date: new Date().toISOString().split('T')[0],
-    startTime: "00:00",
-    endTime: "23:00",
+    startTime: "09:00",
+    endTime: "10:00",
     guests: [],
     newGuest: "",
     location: "",
@@ -544,8 +530,29 @@ const AppointmentScheduler = () => {
     setSelectedDate(new Date(selectedYear, selectedMonth, 1));
   }, [selectedMonth, selectedYear]);
 
+  // Load appointments from Firestore
+  useEffect(() => {
+    if (!user) return;
 
-  // Add this effect to load shifts (simplified, only for conflict checking)
+    const q = query(
+      collection(db, "appointments"),
+      where("userId", "==", user.uid),
+      orderBy("date", "asc"),
+      orderBy("startTime", "asc")
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const appointmentsData = [];
+      querySnapshot.forEach((doc) => {
+        appointmentsData.push({ id: doc.id, ...doc.data() });
+      });
+      setAppointments(appointmentsData);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // Load shifts from Firestore
   useEffect(() => {
     if (!user) return;
 
@@ -587,64 +594,6 @@ const AppointmentScheduler = () => {
     loadShifts();
   }, [user]);
 
-
-
-  // Load appointments from Firestore
-  useEffect(() => {
-    if (!user) return;
-
-    const q = query(
-      collection(db, "appointments"),
-      where("userId", "==", user.uid),
-      orderBy("date", "asc"),
-      orderBy("startTime", "asc")
-    );
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const appointmentsData = [];
-      querySnapshot.forEach((doc) => {
-        appointmentsData.push({ id: doc.id, ...doc.data() });
-      });
-      setAppointments(appointmentsData);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
-
-  // Add this effect to load shifts
-  useEffect(() => {
-    if (!user) return;
-
-    const loadShifts = async () => {
-      setIsLoadingShifts(true);
-      try {
-        const shiftsQuery = query(
-          collection(db, "shifts"),
-          where("userId", "==", user.uid),
-          orderBy("date", "asc")
-        );
-
-        const unsubscribe = onSnapshot(shiftsQuery, (querySnapshot) => {
-          const shiftsData = [];
-          querySnapshot.forEach((doc) => {
-            shiftsData.push({ id: doc.id, ...doc.data(), isShift: true });
-          });
-          setShifts(shiftsData);
-          console.log(`📊 Loaded ${shiftsData.length} shifts`);
-        });
-
-        return () => unsubscribe();
-      } catch (error) {
-        console.error("Error loading shifts:", error);
-      } finally {
-        setIsLoadingShifts(false);
-      }
-    };
-
-    loadShifts();
-  }, [user]);
-
-
   // FIXED: Proper form state management without flashing
   const handleAppointmentChange = useCallback((field, value) => {
     setAppointmentForm(prev => ({
@@ -672,24 +621,20 @@ const AppointmentScheduler = () => {
     }));
   };
 
-  // Check for appointment conflicts
-  // const checkAppointmentConflicts = (appointmentData, excludeId = null) => {
-  //   const { date, startTime, endTime } = appointmentData;
-    
-  //   return appointments.filter(appointment => {
-  //     if (excludeId && appointment.id === excludeId) return false;
-  //     if (appointment.date !== date) return false;
-      
-  //     const newStart = timeToMinutes(startTime);
-  //     const newEnd = timeToMinutes(endTime);
-  //     const existingStart = timeToMinutes(appointment.startTime);
-  //     const existingEnd = timeToMinutes(appointment.endTime);
-      
-  //     return newStart < existingEnd && newEnd > existingStart;
-  //   });
-  // };
+  // Helper function to convert time string to minutes
+  const timeToMinutes = (timeStr) => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
 
-  // Update the checkAppointmentConflicts function to include shifts
+  // Helper function to convert minutes to time string
+  const minutesToTime = (minutes) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  };
+
+  // Check for appointment conflicts (both appointments and shifts)
   const checkAppointmentConflicts = (appointmentData, excludeId = null) => {
     const { date, startTime, endTime } = appointmentData;
     
@@ -727,165 +672,90 @@ const AppointmentScheduler = () => {
     };
   };
 
-  // Helper function to convert time string to minutes
-  const timeToMinutes = (timeStr) => {
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    return hours * 60 + minutes;
+  // Get available time slots for a date (24-hour timeline)
+  const getAvailableTimeSlots = (dateString) => {
+    const dayShifts = shifts.filter(shift => shift.date === dateString);
+    const dayAppointments = appointments.filter(apt => apt.date === dateString);
+    
+    // Combine all busy times
+    const busyTimes = [
+      ...dayShifts.map(shift => ({
+        start: timeToMinutes(shift.startTime),
+        end: timeToMinutes(shift.endTime),
+        type: 'shift',
+        data: shift
+      })),
+      ...dayAppointments.map(appt => ({
+        start: timeToMinutes(appt.startTime),
+        end: timeToMinutes(appt.endTime),
+        type: 'appointment',
+        data: appt
+      }))
+    ].sort((a, b) => a.start - b.start);
+    
+    // Full day 24-hour timeline
+    const dayStart = 0; // 12:00 AM
+    const dayEnd = 24 * 60; // 11:59 PM
+    
+    // Find available slots (gaps between busy times)
+    const availableSlots = [];
+    let currentTime = dayStart;
+    
+    busyTimes.forEach(busy => {
+      if (currentTime < busy.start) {
+        // There's a gap before this busy time
+        const slotDuration = busy.start - currentTime;
+        if (slotDuration >= 15) { // Minimum 15-minute slot
+          availableSlots.push({
+            start: minutesToTime(currentTime),
+            end: minutesToTime(busy.start),
+            duration: slotDuration,
+            startMinutes: currentTime,
+            endMinutes: busy.start
+          });
+        }
+        currentTime = busy.end;
+      } else {
+        // Overlapping or contiguous busy time
+        currentTime = Math.max(currentTime, busy.end);
+      }
+    });
+    
+    // Check for slot after last busy time
+    if (currentTime < dayEnd) {
+      const slotDuration = dayEnd - currentTime;
+      if (slotDuration >= 15) { // Minimum 15-minute slot
+        availableSlots.push({
+          start: minutesToTime(currentTime),
+          end: minutesToTime(dayEnd),
+          duration: slotDuration,
+          startMinutes: currentTime,
+          endMinutes: dayEnd
+        });
+      }
+    }
+    
+    // Filter for reasonable hours (8 AM to 10 PM) and sort by start time
+    const reasonableSlots = availableSlots.filter(slot => 
+      slot.startMinutes >= 8 * 60 && slot.endMinutes <= 22 * 60
+    ).sort((a, b) => a.startMinutes - b.startMinutes);
+    
+    // Take top 5 available slots for suggestion
+    return reasonableSlots.slice(0, 5);
+  };
+
+  // Check if date has shifts
+  const dateHasShifts = (dateString) => {
+    return shifts.some(shift => shift.date === dateString);
   };
 
   // Create new appointment - FIXED: Added security validation
-  // const handleCreateAppointment = async (overrideConflict = false) => {
-  //   if (isSaving) return;
-    
-  //   const form = appointmentForm;
-    
-  //   // Security: Validate required fields
-  //   if (!form.title.trim()) {
-  //     alert("Please enter a title for the appointment");
-  //     return;
-  //   }
-
-  //   // Security: Sanitize inputs
-  //   const sanitizedForm = {
-  //     ...form,
-  //     title: securityUtils.sanitizeInput(form.title.trim()),
-  //     description: securityUtils.sanitizeInput(form.description.trim()),
-  //     location: securityUtils.sanitizeInput(form.location),
-  //   };
-
-  //   // Security: Validate color
-  //   if (!securityUtils.validateColor(sanitizedForm.color)) {
-  //     alert("Please select a valid color");
-  //     return;
-  //   }
-
-  //   // Security: Validate URL for video calls
-  //   if (sanitizedForm.meetingType === 'video' && sanitizedForm.videoLink && 
-  //       !securityUtils.validateUrl(sanitizedForm.videoLink)) {
-  //     alert("Please enter a valid video link URL");
-  //     return;
-  //   }
-
-  //   // Security: Validate time range
-  //   if (!securityUtils.validateTimeRange(sanitizedForm.startTime, sanitizedForm.endTime)) {
-  //     alert("End time must be after start time");
-  //     return;
-  //   }
-
-  //   // Security: Validate date is not in the past
-  //   const selectedDate = new Date(sanitizedForm.date);
-  //   const today = new Date();
-  //   today.setHours(0, 0, 0, 0);
-  //   if (selectedDate < today) {
-  //     alert("Cannot create appointments in the past");
-  //     return;
-  //   }
-
-  //   // Check for conflicts
-  //   const conflicts = checkAppointmentConflicts(
-  //     sanitizedForm, 
-  //     editingAppointment ? editingAppointment.id : null
-  //   );
-
-  //   if (conflicts.length > 0 && !overrideConflict) {
-  //     setConflictingAppointments(conflicts);
-  //     setPendingAppointment(sanitizedForm);
-  //     setShowConflictModal(true);
-  //     return;
-  //   }
-
-  //   setIsSaving(true);
-
-  //   // try {
-  //   //   const appointmentData = {
-  //   //     ...sanitizedForm,
-  //   //     userId: user.uid,
-  //   //     createdAt: new Date(),
-  //   //     updatedAt: new Date()
-  //   //   };
-
-  //   //   if (editingAppointment) {
-  //   //     await updateDoc(doc(db, "appointments", editingAppointment.id), appointmentData);
-  //   //     setAppointments(prev => prev.map(apt => 
-  //   //       apt.id === editingAppointment.id 
-  //   //         ? { ...apt, ...appointmentData }
-  //   //         : apt
-  //   //     ));
-  //   //   } else {
-  //   //     const result = await addDoc(collection(db, "appointments"), appointmentData);
-  //   //     const newAppointment = { 
-  //   //       id: result.id, 
-  //   //       ...appointmentData 
-  //   //     };
-  //   //     setAppointments(prev => [...prev, newAppointment]);
-  //   //   }
-
-  //   //   setShowAppointmentModal(false);
-  //   //   setShowConflictModal(false);
-  //   //   resetAppointmentForm();
-      
-  //   // } catch (error) {
-  //   //   console.error("Error saving appointment:", error);
-  //   //   alert("Error saving appointment. Please try again.");
-  //   // } finally {
-  //   //   setIsSaving(false);
-  //   //   setPendingAppointment(null);
-  //   // }
-
-  //   // Duplicate appointment fix: Move setAppointments inside try-catchf
-  //   try {
-  //     const appointmentData = {
-  //       ...sanitizedForm,
-  //       userId: user.uid,
-  //       createdAt: new Date(),
-  //       updatedAt: new Date(),
-  //       // Add these fields to prevent booking duplication
-  //       synced: false // Add sync flag
-  //     };
-
-  //     if (editingAppointment) {
-  //       await updateDoc(doc(db, "appointments", editingAppointment.id), appointmentData);
-  //       // REMOVED: setAppointments update here
-  //     } else {
-  //       const result = await addDoc(collection(db, "appointments"), appointmentData);
-  //       // REMOVED: setAppointments update here
-  //     }
-
-  //     // Reset form and close modals
-  //     setShowAppointmentModal(false);
-  //     setShowConflictModal(false);
-  //     resetAppointmentForm();
-      
-  //   } catch (error) {
-  //     console.error("Error saving appointment:", error);
-  //     alert("Error saving appointment. Please try again.");
-  //     // Restore appointments from Firestore on error
-  //     const q = query(
-  //       collection(db, "appointments"),
-  //       where("userId", "==", user.uid),
-  //       orderBy("date", "asc"),
-  //       orderBy("startTime", "asc")
-  //     );
-  //     const querySnapshot = await getDocs(q);
-  //     const appointmentsData = [];
-  //     querySnapshot.forEach((doc) => {
-  //       appointmentsData.push({ id: doc.id, ...doc.data() });
-  //     });
-  //     setAppointments(appointmentsData);
-  //   } finally {
-  //     setIsSaving(false);
-  //     setPendingAppointment(null);
-  //   }
-
-  // };
-
-  // Update handleCreateAppointment to handle shift conflicts
   const handleCreateAppointment = async (overrideAppointmentConflict = false, overrideShiftConflict = false) => {
     if (isSaving) return;
     
     const form = appointmentForm;
     
-    // Validation checks (keep existing)
+    // Security: Validate required fields
     if (!form.title.trim()) {
       alert("Please enter a title for the appointment");
       return;
@@ -929,23 +799,23 @@ const AppointmentScheduler = () => {
 
     // Check for conflicts
     const { appointmentConflicts, shiftConflicts, hasAppointmentConflicts, hasShiftConflicts } = checkAppointmentConflicts(
-      form, 
+      sanitizedForm, 
       editingAppointment ? editingAppointment.id : null
     );
 
-    // Handle shift conflicts FIRST (since they're work hours)
-    if (hasShiftConflicts && !overrideShiftConflict) {
-      setShiftConflictDetails(shiftConflicts);
-      setPendingAppointment(form);
-      setShowShiftConflictModal(true);
+    // Handle appointment conflicts FIRST
+    if (hasAppointmentConflicts && !overrideAppointmentConflict) {
+      setConflictingAppointments(appointmentConflicts);
+      setPendingAppointment(sanitizedForm);
+      setShowConflictModal(true);
       return;
     }
 
-    // Handle appointment conflicts SECOND
-    if (hasAppointmentConflicts && !overrideAppointmentConflict) {
-      setConflictingAppointments(appointmentConflicts);
-      setPendingAppointment(form);
-      setShowConflictModal(true);
+    // Handle shift conflicts SECOND (but allow override)
+    if (hasShiftConflicts && !overrideShiftConflict) {
+      setShiftConflictDetails(shiftConflicts);
+      setPendingAppointment(sanitizedForm);
+      setShowShiftConflictModal(true);
       return;
     }
 
@@ -953,10 +823,12 @@ const AppointmentScheduler = () => {
 
     try {
       const appointmentData = {
-        ...form,
+        ...sanitizedForm,
         userId: user.uid,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        synced: false,
+        scheduledAroundShift: hasShiftConflicts // Mark if scheduled despite shift conflict
       };
 
       if (editingAppointment) {
@@ -973,25 +845,62 @@ const AppointmentScheduler = () => {
     } catch (error) {
       console.error("Error saving appointment:", error);
       alert("Error saving appointment. Please try again.");
+      // Restore appointments from Firestore on error
+      const q = query(
+        collection(db, "appointments"),
+        where("userId", "==", user.uid),
+        orderBy("date", "asc"),
+        orderBy("startTime", "asc")
+      );
+      const querySnapshot = await getDocs(q);
+      const appointmentsData = [];
+      querySnapshot.forEach((doc) => {
+        appointmentsData.push({ id: doc.id, ...doc.data() });
+      });
+      setAppointments(appointmentsData);
     } finally {
       setIsSaving(false);
+      setPendingAppointment(null);
+      setShiftConflictDetails([]);
+      setShiftOverride(false);
+    }
+  };
+
+  // Handle shift conflict resolution
+  const handleShiftConflictResolution = (action) => {
+    if (action === 'reschedule') {
+      setShowShiftConflictModal(false);
+      setShiftConflictDetails([]);
+      // Show available time slots
+      const availableSlots = getAvailableTimeSlots(pendingAppointment.date);
+      if (availableSlots.length > 0) {
+        const slot = availableSlots[0];
+        setAppointmentForm(prev => ({
+          ...prev,
+          startTime: slot.start,
+          endTime: slot.end
+        }));
+      }
+    } else if (action === 'continue') {
+      handleCreateAppointment(false, true);
+    } else if (action === 'cancel') {
+      setShowShiftConflictModal(false);
       setPendingAppointment(null);
       setShiftConflictDetails([]);
     }
   };
 
-
-
-  // Handle conflict resolution
+  // Handle conflict resolution (appointment conflicts)
   const handleConflictResolution = (action) => {
     if (action === 'reschedule') {
       setShowConflictModal(false);
     } else if (action === 'continue') {
-      handleCreateAppointment(true);
+      handleCreateAppointment(true, shiftOverride);
     } else if (action === 'cancel') {
       setShowConflictModal(false);
       setPendingAppointment(null);
       setConflictingAppointments([]);
+      setShiftOverride(false);
     }
   };
 
@@ -1019,7 +928,6 @@ const AppointmentScheduler = () => {
   const handleDeleteAppointment = async (appointmentId) => {
     if (window.confirm("Are you sure you want to delete this appointment?")) {
       try {
-        // REMOVED: setAppointments update here
         await deleteDoc(doc(db, "appointments", appointmentId));
       } catch (error) {
         console.error("Error deleting appointment:", error);
@@ -1028,7 +936,7 @@ const AppointmentScheduler = () => {
     }
   };
 
-  // Add this function to your AppointmentScheduler
+  // Create user profile
   const createUserProfile = async () => {
     if (!user) return;
     
@@ -1044,8 +952,8 @@ const AppointmentScheduler = () => {
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           defaultDuration: 60,
           workingHours: {
-            start: "00:00",
-            end: "23:00"
+            start: "09:00",
+            end: "17:00"
           },
           meetingTypes: ["in-person", "video", "phone"],
           createdAt: new Date()
@@ -1057,12 +965,12 @@ const AppointmentScheduler = () => {
     }
   };
 
-// Call this when user logs in
-useEffect(() => {
-  if (user) {
-    createUserProfile();
-  }
-}, [user]);
+  // Call this when user logs in
+  useEffect(() => {
+    if (user) {
+      createUserProfile();
+    }
+  }, [user]);
 
   // Reset appointment form
   const resetAppointmentForm = () => {
@@ -1090,143 +998,6 @@ useEffect(() => {
     }));
   };
 
-  
-  // Add this function to handle shift conflict resolution
-  const handleShiftConflictResolution = (action) => {
-    if (action === 'reschedule') {
-      setShowShiftConflictModal(false);
-      setShiftConflictDetails([]);
-    } else if (action === 'continue') {
-      // Override shift conflict but still check for appointment conflicts
-      const form = pendingAppointment;
-      const { appointmentConflicts, hasAppointmentConflicts } = checkAppointmentConflicts(
-        form, 
-        editingAppointment ? editingAppointment.id : null
-      );
-      
-      if (hasAppointmentConflicts) {
-        setConflictingAppointments(appointmentConflicts);
-        setShowConflictModal(true);
-      } else {
-        // No appointment conflicts, proceed with shift override
-        handleCreateAppointment(false, true);
-      }
-    } else if (action === 'cancel') {
-      setShowShiftConflictModal(false);
-      setPendingAppointment(null);
-      setShiftConflictDetails([]);
-    }
-  };
-
-  
-  
-  // Add Shift Conflict Modal Component
-  const ShiftConflictModal = () => {
-    if (!pendingAppointment) return null;
-
-    return (
-      <Modal 
-        show={showShiftConflictModal} 
-        onHide={() => handleShiftConflictResolution('cancel')}
-        centered
-        aria-labelledby="shift-conflict-modal-title"
-      >
-        <Modal.Header closeButton className="border-bottom-0 bg-danger text-white">
-          <Modal.Title id="shift-conflict-modal-title" className="d-flex align-items-center">
-            <FaClock className="me-2" />
-            Work Shift Conflict
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Alert variant="danger" className="mb-3">
-            <FaExclamationTriangle className="me-2" />
-            <strong>Cannot Schedule During Work Hours</strong>
-            <div className="small mt-1">
-              The selected time conflicts with your scheduled work shift.
-            </div>
-          </Alert>
-          
-          <div className="mb-3">
-            <strong>Your appointment:</strong>
-            <div className="mt-1 p-3 bg-light rounded">
-              <div className="mb-1">
-                <strong>Date:</strong> {new Date(pendingAppointment.date).toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </div>
-              <div className="mb-1">
-                <strong>Time:</strong> {pendingAppointment.startTime} - {pendingAppointment.endTime}
-              </div>
-              {pendingAppointment.title && (
-                <div>
-                  <strong>Title:</strong> {pendingAppointment.title}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="mb-3">
-            <strong>Conflicting work shift(s):</strong>
-            <div className="mt-2">
-              {shiftConflictDetails.map((shift, index) => (
-                <Card key={index} className="mb-2 border-danger">
-                  <Card.Body className="p-2">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <div className="fw-bold text-danger">
-                          <FaClock className="me-1" />
-                          Work Shift
-                        </div>
-                        <div className="small text-muted">
-                          {shift.startTime} - {shift.endTime} ({shift.duration} hours)
-                        </div>
-                        {shift.company && (
-                          <div className="small text-muted">
-                            <FaHospital className="me-1" />
-                            {shift.company}
-                          </div>
-                        )}
-                      </div>
-                      <Badge bg="danger" className="px-2 py-1">
-                        <FaClock /> Shift
-                      </Badge>
-                    </div>
-                  </Card.Body>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          <div className="alert alert-info small mb-0">
-            <strong>Note:</strong> Work shifts from your timesheet are blocked to prevent scheduling conflicts.
-          </div>
-        </Modal.Body>
-        <Modal.Footer className="border-top-0">
-          <div className="w-100 d-flex flex-column gap-2">
-            <Button 
-              variant="outline-primary" 
-              onClick={() => handleShiftConflictResolution('reschedule')}
-              className="w-100"
-            >
-              Choose Different Time
-            </Button>
-            <Button 
-              variant="outline-secondary" 
-              onClick={() => handleShiftConflictResolution('cancel')}
-              className="w-100"
-            >
-              Cancel Appointment
-            </Button>
-          </div>
-        </Modal.Footer>
-      </Modal>
-    );
-  };
-
-  //
   // Generate booking link
   const generateBookingLink = () => {
     if (process.env.NODE_ENV === 'production') {
@@ -1236,7 +1007,6 @@ useEffect(() => {
       return `${baseUrl}/#/book/${user?.uid || 'user'}`;
     }
   };
-
 
   // Copy booking link to clipboard
   const handleCopyBookingLink = async () => {
@@ -1249,18 +1019,10 @@ useEffect(() => {
     }
   };
 
-
   // Get appointments for selected date
-  // const getAppointmentsForDate = useCallback((dateString) => {
-  //   return appointments.filter(apt => apt.date === dateString);
-  // }, [appointments]);
-
-  // Update the getAppointmentsForDate to ONLY return appointments (not shifts)
   const getAppointmentsForDate = useCallback((dateString) => {
-    // Only return appointments, not shifts
     return appointments.filter(apt => apt.date === dateString);
   }, [appointments]);
-
 
   // Calendar navigation
   const navigateDate = (direction) => {
@@ -1284,8 +1046,7 @@ useEffect(() => {
     return desktopValue;
   };
 
-  // FIXED: Calendar generation - For mobile/tablet, show only current month days
-  // Update the generateCalendarDays function to use only appointments (not shifts)
+  // FIXED: Calendar generation
   const generateCalendarDays = useMemo(() => {
     const year = selectedDate.getFullYear();
     const month = selectedDate.getMonth();
@@ -1301,7 +1062,7 @@ useEffect(() => {
       for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
         const date = new Date(year, month, i);
         const dateString = date.toISOString().split('T')[0];
-        const dayAppointments = getAppointmentsForDate(dateString); // Only appointments
+        const dayAppointments = getAppointmentsForDate(dateString);
         
         // Sort appointments by start time and take only the first two earliest
         const sortedAppointments = dayAppointments
@@ -1315,7 +1076,8 @@ useEffect(() => {
           isCurrentMonth: true,
           isPreviousMonth: false,
           isNextMonth: false,
-          appointments: sortedAppointments
+          appointments: sortedAppointments,
+          hasShifts: dateHasShifts(dateString)
         });
       }
       
@@ -1340,7 +1102,8 @@ useEffect(() => {
         isCurrentMonth: false,
         isPreviousMonth: true,
         isNextMonth: false,
-        appointments: []
+        appointments: [],
+        hasShifts: false
       });
     }
     
@@ -1348,7 +1111,7 @@ useEffect(() => {
     for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
       const date = new Date(year, month, i);
       const dateString = date.toISOString().split('T')[0];
-      const dayAppointments = getAppointmentsForDate(dateString); // Only appointments
+      const dayAppointments = getAppointmentsForDate(dateString);
       
       // Sort appointments by start time and take only the first two earliest
       const sortedAppointments = dayAppointments
@@ -1362,7 +1125,8 @@ useEffect(() => {
         isCurrentMonth: true,
         isPreviousMonth: false,
         isNextMonth: false,
-        appointments: sortedAppointments
+        appointments: sortedAppointments,
+        hasShifts: dateHasShifts(dateString)
       });
     }
     
@@ -1384,75 +1148,25 @@ useEffect(() => {
         isCurrentMonth: false,
         isPreviousMonth: false,
         isNextMonth: true,
-        appointments: []
+        appointments: [],
+        hasShifts: false
       });
       nextMonthDay++;
     }
     
     return days;
-  }, [selectedDate, getAppointmentsForDate, isMobile, isTablet]);
-
-
-  // Add a function to get available time slots (optional, for better UX)
-  const getAvailableTimeSlots = (dateString) => {
-    const dayShifts = shifts.filter(shift => shift.date === dateString);
-    const dayAppointments = appointments.filter(apt => apt.date === dateString);
-    
-    // Start with all day as available (9 AM to 5 PM)
-    const availableSlots = [];
-    const dayStart = 0 * 60; // 00:00 AM in minutes
-    const dayEnd = 23 * 60;  // 23:00 PM in minutes
-    
-    // Combine all busy times
-    const busyTimes = [
-      ...dayShifts.map(shift => ({
-        start: timeToMinutes(shift.startTime),
-        end: timeToMinutes(shift.endTime)
-      })),
-      ...dayAppointments.map(appt => ({
-        start: timeToMinutes(appt.startTime),
-        end: timeToMinutes(appt.endTime)
-      }))
-    ].sort((a, b) => a.start - b.start);
-    
-    // Find available slots
-    let currentTime = dayStart;
-    
-    busyTimes.forEach(busy => {
-      if (currentTime < busy.start) {
-        availableSlots.push({
-          start: minutesToTime(currentTime),
-          end: minutesToTime(busy.start)
-        });
-      }
-      currentTime = Math.max(currentTime, busy.end);
-    });
-    
-    if (currentTime < dayEnd) {
-      availableSlots.push({
-        start: minutesToTime(currentTime),
-        end: minutesToTime(dayEnd)
-      });
-    }
-    
-    return availableSlots;
-  };
-
-  // Helper function to convert minutes to time string
-  const minutesToTime = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-  };
-
+  }, [selectedDate, getAppointmentsForDate, isMobile, isTablet, shifts]);
 
   // Handle day click - shows day view modal
   const handleDayClick = (day) => {
     // Get ALL appointments for this day (not just the first two)
     const allAppointmentsForDay = getAppointmentsForDate(day.dateString);
+    const dayShifts = shifts.filter(shift => shift.date === day.dateString);
+    
     setSelectedDay({
       ...day,
-      allAppointments: allAppointmentsForDay
+      allAppointments: allAppointmentsForDay,
+      shifts: dayShifts
     });
     setShowDayViewModal(true);
   };
@@ -1489,7 +1203,144 @@ useEffect(() => {
 
   const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i);
 
-  // Conflict Resolution Modal
+  // Shift Conflict Modal Component
+  const ShiftConflictModal = () => {
+    if (!pendingAppointment) return null;
+
+    const availableSlots = getAvailableTimeSlots(pendingAppointment.date);
+
+    return (
+      <Modal 
+        show={showShiftConflictModal} 
+        onHide={() => handleShiftConflictResolution('cancel')}
+        centered
+        aria-labelledby="shift-conflict-modal-title"
+      >
+        <Modal.Header closeButton className="border-bottom-0 bg-warning">
+          <Modal.Title id="shift-conflict-modal-title" className="d-flex align-items-center">
+            <FaClock className="me-2" />
+            Work Shift Conflict Detected
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Alert variant="warning" className="mb-3">
+            <FaExclamationTriangle className="me-2" />
+            <strong>Note:</strong> The selected time overlaps with your scheduled work shift(s).
+          </Alert>
+          
+          <div className="mb-3">
+            <strong>Your appointment:</strong>
+            <div className="mt-1 p-2 bg-light rounded">
+              <div><strong>Time:</strong> {pendingAppointment.startTime} - {pendingAppointment.endTime}</div>
+              <div><strong>Date:</strong> {new Date(pendingAppointment.date).toLocaleDateString()}</div>
+              {pendingAppointment.title && <div><strong>Title:</strong> {pendingAppointment.title}</div>}
+            </div>
+          </div>
+
+          <div className="mb-3">
+            <strong>Conflicting work shift(s):</strong>
+            <ListGroup variant="flush" className="mt-2">
+              {shiftConflictDetails.map((shift, index) => (
+                <ListGroup.Item key={shift.id} className="px-0">
+                  <div className="d-flex justify-content-between align-items-start">
+                    <div>
+                      <div className="fw-medium">
+                        {shift.company ? `${shift.company} Shift` : "Work Shift"}
+                      </div>
+                      <div className="text-muted small">
+                        {shift.startTime} - {shift.endTime} ({shift.duration} hours)
+                      </div>
+                      <div className="text-muted small">
+                        <FaClock className="me-1" />
+                        {shift.weekday}
+                      </div>
+                    </div>
+                    <Badge 
+                      bg="warning"
+                      text="dark"
+                      className="px-2 py-1"
+                    >
+                      <FaBuilding className="me-1" />
+                      Work
+                    </Badge>
+                  </div>
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+          </div>
+
+          {availableSlots.length > 0 && (
+            <div className="mb-3">
+              <strong>Available time slots around your shifts:</strong>
+              <ListGroup variant="flush" className="mt-2">
+                {availableSlots.map((slot, index) => (
+                  <ListGroup.Item key={index} className="px-0">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <div className="fw-medium">{slot.start} - {slot.end}</div>
+                        <div className="text-muted small">
+                          Duration: {Math.floor(slot.duration / 60)}h {slot.duration % 60}m
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        onClick={() => {
+                          setAppointmentForm(prev => ({
+                            ...prev,
+                            startTime: slot.start,
+                            endTime: slot.end
+                          }));
+                          setShowShiftConflictModal(false);
+                          setShiftConflictDetails([]);
+                        }}
+                      >
+                        Use This Time
+                      </Button>
+                    </div>
+                  </ListGroup.Item>
+                ))}
+              </ListGroup>
+            </div>
+          )}
+
+          <div className="text-muted small mb-3">
+            <FaExclamationTriangle className="me-1" />
+            You can still schedule the appointment during work hours if needed, but please ensure it doesn't interfere with your work commitments.
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="border-top-0">
+          <div className="w-100 d-flex flex-column gap-2">
+            {availableSlots.length > 0 && (
+              <Button 
+                variant="outline-primary" 
+                onClick={() => handleShiftConflictResolution('reschedule')}
+                className="w-100"
+              >
+                Use Suggested Time
+              </Button>
+            )}
+            <Button 
+              variant="warning" 
+              onClick={() => handleShiftConflictResolution('continue')}
+              className="w-100"
+            >
+              Schedule Anyway
+            </Button>
+            <Button 
+              variant="outline-secondary" 
+              onClick={() => handleShiftConflictResolution('cancel')}
+              className="w-100"
+            >
+              Cancel
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
+    );
+  };
+
+  // Conflict Resolution Modal (for appointment conflicts)
   const ConflictResolutionModal = () => {
     if (!pendingAppointment) return null;
 
@@ -1627,10 +1478,8 @@ useEffect(() => {
     </div>
   );
 
-
   // Calendar Header Component
   const CalendarHeader = () => (
-
     <div className="d-none d-lg-block">
       <Card className="border-0 shadow-sm mb-3">
         <Card.Body className="py-3">
@@ -1735,129 +1584,12 @@ useEffect(() => {
           </div>
         </Card.Body>
       </Card>
-      
     </div>
   );
 
   // Calendar Day Component
-  // const CalendarDay = React.memo(({ day, onDayClick, isMobile, isTablet }) => {
-  //   const isToday = day.date.toDateString() === new Date().toDateString();
-    
-  //   // Responsive values
-  //   const padding = getResponsiveValue("p-1", "p-1", "p-1");
-  //   const minHeight = getResponsiveValue("70px", "100px", "100px");
-  //   const fontSize = getResponsiveValue("0.75rem", "0.8rem", "0.85rem");
-  //   const badgeFontSize = getResponsiveValue("0.6rem", "0.65rem", "0.65rem");
-  //   const timeFontSize = getResponsiveValue("0.55rem", "0.6rem", "0.6rem");
-  //   const badgeMinHeight = getResponsiveValue("22px", "26px", "28px");
-  //   const badgePadding = getResponsiveValue("2px 3px", "3px", "4px");
-  //   const badgeMargin = getResponsiveValue("1px", "2px", "4px");
-    
-  //   return (
-  //     <div
-  //       className={`calendar-day ${padding} border-end border-bottom ${
-  //         !day.isCurrentMonth ? 'bg-light text-muted' : ''
-  //       } ${isToday ? 'bg-primary bg-opacity-10 border-primary' : ''} ${
-  //         day.isPreviousMonth ? 'previous-month-day' : day.isNextMonth ? 'next-month-day' : ''
-  //       }`}
-  //       style={{ 
-  //         minHeight: minHeight,
-  //         height: '100%',
-  //         cursor: 'pointer',
-  //         fontSize: fontSize,
-  //         opacity: day.isCurrentMonth ? 1 : 0.4,
-  //         display: 'flex',
-  //         flexDirection: 'column'
-  //       }}
-  //       onClick={() => onDayClick(day)}
-  //       role="gridcell"
-  //       aria-label={`${day.date.getDate()} ${day.date.toLocaleDateString('en-US', { month: 'long' })} ${isToday ? ', Today' : ''}. ${day.appointments.length} appointments`}
-  //       tabIndex={0}
-  //       onKeyPress={(e) => {
-  //         if (e.key === 'Enter' || e.key === ' ') {
-  //           e.preventDefault();
-  //           onDayClick(day);
-  //         }
-  //       }}
-  //     >
-  //       <div className={`d-flex justify-content-between align-items-start ${
-  //         isMobile ? 'mb-1' : isTablet ? 'mb-1' : 'mb-1'
-  //       } flex-shrink-0`}>
-  //         <span className={`fw-medium ${isToday ? 'text-primary' : ''} ${
-  //           !day.isCurrentMonth ? 'text-muted' : ''
-  //         }`}>
-  //           {day.day}
-  //         </span>
-  //         {isToday && (
-  //           <Badge bg="primary" pill className="ms-1" style={{ 
-  //             fontSize: getResponsiveValue("0.5rem", "0.6rem", "0.6rem")
-  //           }}>
-  //             Today
-  //           </Badge>
-  //         )}
-  //       </div>
-        
-  //       <div className="appointments-list flex-grow-1 d-flex flex-column gap-1" style={{ 
-  //         overflow: 'hidden'
-  //       }}>
-  //         {day.appointments.map((appointment, idx) => (
-  //           <div
-  //             key={idx}
-  //             className="appointment-badge small rounded text-white flex-shrink-0"
-  //             style={{ 
-  //               backgroundColor: appointment.color || '#006D7D',
-  //               fontSize: badgeFontSize,
-  //               border: `1px solid ${appointment.color || '#006D7D'}`,
-  //               minHeight: badgeMinHeight,
-  //               flexShrink: 0,
-  //               padding: badgePadding,
-  //               marginBottom: badgeMargin
-  //             }}
-  //             onClick={(e) => {
-  //               e.stopPropagation();
-  //             }}
-  //             role="button"
-  //             tabIndex={0}
-  //             aria-label={`Appointment: ${appointment.title} from ${appointment.startTime} to ${appointment.endTime}`}
-  //           >
-  //             <div className="fw-medium text-truncate" style={{ 
-  //               fontSize: timeFontSize,
-  //               lineHeight: getResponsiveValue('1', '1.2', '1.2')
-  //             }}>
-  //               {appointment.startTime} - {appointment.endTime}
-  //             </div>
-  //             <div className="text-truncate" style={{ 
-  //               fontSize: timeFontSize,
-  //               lineHeight: getResponsiveValue('1', '1.2', '1.2')
-  //             }}>
-  //               {appointment.title}
-  //             </div>
-  //           </div>
-  //         ))}
-  //         {/* Add empty space if less than 2 appointments to maintain consistent height */}
-  //         {day.appointments.length < 2 && 
-  //           Array.from({ length: 2 - day.appointments.length }).map((_, idx) => (
-  //             <div key={`empty-${idx}`} style={{ 
-  //               minHeight: badgeMinHeight, 
-  //               flexShrink: 0 
-  //             }} />
-  //           ))
-  //         }
-  //       </div>
-  //     </div>
-  //   );
-  // });
-
-  // Update the CalendarDay component to show shifts differently
   const CalendarDay = React.memo(({ day, onDayClick, isMobile, isTablet }) => {
     const isToday = day.date.toDateString() === new Date().toDateString();
-    
-    // Get all events for this day (appointments + shifts)
-    const dayAppointments = appointments.filter(apt => apt.date === day.dateString && !apt.isShift);
-    const dayShifts = shifts.filter(shift => shift.date === day.dateString);
-    const allEvents = [...dayAppointments, ...dayShifts]
-      .sort((a, b) => a.startTime.localeCompare(b.startTime))
-      .slice(0, 2);
     
     // Responsive values
     const padding = getResponsiveValue("p-1", "p-1", "p-1");
@@ -1875,7 +1607,7 @@ useEffect(() => {
           !day.isCurrentMonth ? 'bg-light text-muted' : ''
         } ${isToday ? 'bg-primary bg-opacity-10 border-primary' : ''} ${
           day.isPreviousMonth ? 'previous-month-day' : day.isNextMonth ? 'next-month-day' : ''
-        }`}
+        } ${day.hasShifts ? 'border-warning border-2' : ''}`}
         style={{ 
           minHeight: minHeight,
           height: '100%',
@@ -1888,7 +1620,7 @@ useEffect(() => {
         }}
         onClick={() => onDayClick(day)}
         role="gridcell"
-        aria-label={`${day.date.getDate()} ${day.date.toLocaleDateString('en-US', { month: 'long' })} ${isToday ? ', Today' : ''}. ${allEvents.length} events`}
+        aria-label={`${day.date.getDate()} ${day.date.toLocaleDateString('en-US', { month: 'long' })} ${isToday ? ', Today' : ''} ${day.hasShifts ? ' (Has work shifts)' : ''}. ${day.appointments.length} appointments`}
         tabIndex={0}
         onKeyPress={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -1897,13 +1629,26 @@ useEffect(() => {
           }
         }}
       >
+        {/* Shift indicator dot */}
+        {day.hasShifts && (
+          <div className="shift-indicator" style={{
+            position: 'absolute',
+            top: '2px',
+            right: '2px',
+            width: '6px',
+            height: '6px',
+            backgroundColor: '#FF6B6B',
+            borderRadius: '50%'
+          }} />
+        )}
+        
         <div className={`d-flex justify-content-between align-items-start ${
           isMobile ? 'mb-1' : isTablet ? 'mb-1' : 'mb-1'
         } flex-shrink-0`}>
           <span className={`fw-medium ${isToday ? 'text-primary' : ''} ${
             !day.isCurrentMonth ? 'text-muted' : ''
           }`}>
-            {day.date.getDate()}
+            {day.day}
           </span>
           {isToday && (
             <Badge bg="primary" pill className="ms-1" style={{ 
@@ -1917,64 +1662,43 @@ useEffect(() => {
         <div className="appointments-list flex-grow-1 d-flex flex-column gap-1" style={{ 
           overflow: 'hidden'
         }}>
-          {allEvents.map((event, idx) => {
-            const isShift = event.isShift;
-            const backgroundColor = isShift ? '#FF6B6B' : (event.color || '#006D7D');
-            const borderStyle = isShift ? '2px solid #FF4444' : `1px solid ${event.color || '#006D7D'}`;
-            const opacity = isShift ? 0.9 : 1;
-            
-            return (
-              <div
-                key={idx}
-                className="appointment-badge small rounded text-white flex-shrink-0"
-                style={{ 
-                  backgroundColor: backgroundColor,
-                  opacity: opacity,
-                  fontSize: badgeFontSize,
-                  border: borderStyle,
-                  minHeight: badgeMinHeight,
-                  flexShrink: 0,
-                  padding: badgePadding,
-                  marginBottom: badgeMargin,
-                  position: 'relative'
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-                role="button"
-                tabIndex={0}
-                aria-label={`${isShift ? 'Shift' : 'Appointment'}: ${event.title} from ${event.startTime} to ${event.endTime}`}
-              >
-                {isShift && (
-                  <div className="shift-indicator" style={{
-                    position: 'absolute',
-                    top: '2px',
-                    right: '4px',
-                    fontSize: '0.5rem',
-                    fontWeight: 'bold'
-                  }}>
-                    ⚙️
-                  </div>
-                )}
-                <div className="fw-medium text-truncate" style={{ 
-                  fontSize: timeFontSize,
-                  lineHeight: getResponsiveValue('1', '1.2', '1.2'),
-                  paddingRight: isShift ? '12px' : '0'
-                }}>
-                  {event.startTime} - {event.endTime}
-                </div>
-                <div className="text-truncate" style={{ 
-                  fontSize: timeFontSize,
-                  lineHeight: getResponsiveValue('1', '1.2', '1.2')
-                }}>
-                  {isShift ? 'Work Shift' : event.title}
-                </div>
+          {day.appointments.map((appointment, idx) => (
+            <div
+              key={idx}
+              className="appointment-badge small rounded text-white flex-shrink-0"
+              style={{ 
+                backgroundColor: appointment.color || '#006D7D',
+                fontSize: badgeFontSize,
+                border: `1px solid ${appointment.color || '#006D7D'}`,
+                minHeight: badgeMinHeight,
+                flexShrink: 0,
+                padding: badgePadding,
+                marginBottom: badgeMargin
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={`Appointment: ${appointment.title} from ${appointment.startTime} to ${appointment.endTime}`}
+            >
+              <div className="fw-medium text-truncate" style={{ 
+                fontSize: timeFontSize,
+                lineHeight: getResponsiveValue('1', '1.2', '1.2')
+              }}>
+                {appointment.startTime} - {appointment.endTime}
               </div>
-            );
-          })}
-          {/* Add empty space if less than 2 events to maintain consistent height */}
-          {allEvents.length < 2 && 
-            Array.from({ length: 2 - allEvents.length }).map((_, idx) => (
+              <div className="text-truncate" style={{ 
+                fontSize: timeFontSize,
+                lineHeight: getResponsiveValue('1', '1.2', '1.2')
+              }}>
+                {appointment.title}
+              </div>
+            </div>
+          ))}
+          {/* Add empty space if less than 2 appointments to maintain consistent height */}
+          {day.appointments.length < 2 && 
+            Array.from({ length: 2 - day.appointments.length }).map((_, idx) => (
               <div key={`empty-${idx}`} style={{ 
                 minHeight: badgeMinHeight, 
                 flexShrink: 0 
@@ -2055,6 +1779,27 @@ useEffect(() => {
               />
             ))}
           </div>
+          
+          {/* Legend */}
+          <div className="mt-3 d-flex flex-wrap gap-3 justify-content-center small">
+            <div className="d-flex align-items-center">
+              <div className="shift-indicator-dot me-1" style={{
+                width: '8px',
+                height: '8px',
+                backgroundColor: '#FF6B6B',
+                borderRadius: '50%'
+              }} />
+              <span className="text-muted">Work Shift Day</span>
+            </div>
+            <div className="d-flex align-items-center">
+              <div className="border border-primary bg-primary bg-opacity-10 me-1" style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '2px'
+              }} />
+              <span className="text-muted">Today</span>
+            </div>
+          </div>
         </Card.Body>
       </Card>
     );
@@ -2065,34 +1810,7 @@ useEffect(() => {
     apt.status === 'pending' && apt.isBooking
   ).length;
 
-  // Add this notification near the top of your component
-  {pendingBookingsCount > 0 && (
-    <Alert variant="warning" className="mb-3">
-      <div className="d-flex justify-content-between align-items-center">
-        <div>
-          <FaExclamationTriangle className="me-2" />
-          You have <strong>{pendingBookingsCount}</strong> pending booking{pendingBookingsCount !== 1 ? 's' : ''} waiting for approval.
-        </div>
-        <Button 
-          variant="outline-warning" 
-          size="sm"
-          onClick={() => {
-            // Scroll to today or show pending bookings
-            const today = new Date().toISOString().split('T')[0];
-            setSelectedDate(today);
-          }}
-        >
-          Review Bookings
-        </Button>
-      </div>
-    </Alert>
-  )}
-
-
-
- // Enhanced AppointmentCard component with approval workflow
-  // In AppointmentScheduler.jsx - Update the AppointmentCard component
-  // Enhanced AppointmentCard with proper status handling
+  // Enhanced AppointmentCard component with approval workflow
   const AppointmentCard = ({ appointment, onEdit, onDelete, onApprove, onReject }) => {
     const isExpanded = expandedAppointments[appointment.id];
     const isPending = appointment.status === 'pending';
@@ -2133,6 +1851,12 @@ useEffect(() => {
                   <Badge bg="danger">
                     <FaTimes className="me-1" />
                     Rejected
+                  </Badge>
+                )}
+                {appointment.scheduledAroundShift && (
+                  <Badge bg="info">
+                    <FaClock className="me-1" />
+                    Around Shift
                   </Badge>
                 )}
               </div>
@@ -2278,8 +2002,7 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* Rest of the component remains the same */}
-           {/* See More Section */}
+          {/* See More Section */}
           {hasAdditionalInfo && (
             <div className="see-more-section">
               <Button
@@ -2344,162 +2067,12 @@ useEffect(() => {
     );
   };
 
-
-
   // Modern Day View Modal Component
-  // const DayViewModal = () => {
-  //   if (!selectedDay) return null;
-
-  //   const dayAppointments = selectedDay.allAppointments || [];
-  //   const dayName = selectedDay.date.toLocaleDateString('en-US', { weekday: 'long' });
-  //   const dateString = selectedDay.date.toLocaleDateString('en-US', { 
-  //     month: 'long', 
-  //     day: 'numeric', 
-  //     year: 'numeric' 
-  //   });
-  //   const isToday = selectedDay.date.toDateString() === new Date().toDateString();
-
-  //   // Calculate total hours and appointment stats
-  //   const totalHours = dayAppointments.reduce((total, apt) => {
-  //     const start = new Date(`2000-01-01T${apt.startTime}`);
-  //     const end = new Date(`2000-01-01T${apt.endTime}`);
-  //     return total + (end - start) / (1000 * 60 * 60);
-  //   }, 0);
-
-  //   return (
-  //     <Modal 
-  //       show={showDayViewModal} 
-  //       onHide={() => setShowDayViewModal(false)} 
-  //       size="lg"
-  //       aria-labelledby="day-view-modal-title"
-  //       className="modern-day-modal"
-  //     >
-  //       <Modal.Header closeButton className="border-bottom-0 pb-0">
-  //         <Modal.Title id="day-view-modal-title" className="w-100">
-  //           <div className="d-flex justify-content-between align-items-start mb-3">
-  //             <div className="flex-grow-1">
-  //               <div className="d-flex align-items-center mb-2">
-  //                 {/* <div className={`date-indicator ${isToday ? 'today' : ''} me-3`}>
-  //                   <div className="day-number">{selectedDay.date.getDate()}</div>
-  //                   <div className="month-name">{selectedDay.date.toLocaleDateString('en-US', { month: 'short' })}</div>
-  //                 </div> */}
-  //                 <div>
-  //                   <h4 className="mb-1 fw-bold day-name">{dayName}</h4>
-  //                   <p className="text-muted mb-0 date-string">{dateString}</p>
-  //                 </div>
-  //               </div>
-                
-  //               {/* Quick Stats */}
-  //               {dayAppointments.length > 0 && (
-  //                 <div className="quick-stats d-flex gap-3 mt-3">
-  //                   <div className="stat-item text-center">
-  //                     <div className="stat-number fw-bold text-primary">{dayAppointments.length}</div>
-  //                     <div className="stat-label small text-muted">Appointments</div>
-  //                   </div>
-  //                   <div className="stat-item text-center">
-  //                     <div className="stat-number fw-bold text-success">{totalHours.toFixed(1)}h</div>
-  //                     <div className="stat-label small text-muted">Total Hours</div>
-  //                   </div>
-  //                   <div className="stat-item text-center">
-  //                     <div className="stat-number fw-bold text-info">
-  //                       {dayAppointments.filter(apt => apt.meetingType === 'in-person').length}
-  //                     </div>
-  //                     <div className="stat-label small text-muted">In Person</div>
-  //                   </div>
-  //                 </div>
-  //               )}
-  //             </div>
-              
-  //             <Button
-  //               variant="primary"
-  //               onClick={handleNewAppointmentForDay}
-  //               aria-label={`Add new appointment for ${dateString}`}
-  //               className="modern-primary-btn flex-shrink-0"
-  //               size="sm"
-  //             >
-  //               <FaRegCalendarPlus className="me-2" />
-  //               New Appointment
-  //             </Button>
-  //           </div>
-  //         </Modal.Title>
-  //       </Modal.Header>
-        
-  //       <Modal.Body className="pt-0">
-  //         {dayAppointments.length === 0 ? (
-  //           <div className="empty-state text-center py-5">
-  //             <div className="empty-icon mb-4">
-  //               <FaCalendarAlt size={48} className="text-muted opacity-25" />
-  //             </div>
-  //             <h5 className="text-muted mb-2">No Appointments Scheduled</h5>
-  //             <p className="text-muted mb-4">You have a free day! Time to schedule something productive.</p>
-  //             <Button
-  //               variant="primary"
-  //               onClick={handleNewAppointmentForDay}
-  //               size="lg"
-  //               className="modern-primary-btn"
-  //             >
-  //               <FaPlus className="me-2" />
-  //               Schedule Your First Appointment
-  //             </Button>
-  //           </div>
-  //         ) : (
-  //           <div className="appointments-container">
-  //             <div className="timeline-header d-flex justify-content-between align-items-center mb-4">
-  //               <h6 className="mb-0 fw-bold">Daily Schedule</h6>
-  //               <Badge bg="light" text="dark" className="px-3 py-2">
-  //                 {dayAppointments.length} appointment{dayAppointments.length !== 1 ? 's' : ''}
-  //               </Badge>
-  //             </div>
-              
-  //             <div className="appointments-list">
-  //               {dayAppointments
-  //                 .sort((a, b) => a.startTime.localeCompare(b.startTime))
-  //                 .map((appointment) => (
-  //                 <AppointmentCard
-  //                   key={appointment.id}
-  //                   appointment={appointment}
-  //                   onEdit={handleEditAppointment}
-  //                   onDelete={handleDeleteAppointment}
-  //                   onApprove={handleApproveBooking}
-  //                   onReject={handleRejectBooking}
-  //                 />
-  //               ))}
-  //             </div>
-  //           </div>
-  //         )}
-  //       </Modal.Body>
-        
-  //       <Modal.Footer className="border-top-0 pt-0">
-  //         <div className="w-100 d-flex justify-content-between">
-  //           <Button 
-  //             variant="outline-secondary" 
-  //             onClick={() => setShowDayViewModal(false)}
-  //             className="flex-fill me-2"
-  //           >
-  //             Close
-  //           </Button>
-  //           <Button 
-  //             variant="primary" 
-  //             onClick={handleNewAppointmentForDay}
-  //             className="flex-fill modern-primary-btn"
-  //           >
-  //             <FaPlus className="me-2" />
-  //             Add Another Appointment
-  //           </Button>
-  //         </div>
-  //       </Modal.Footer>
-  //     </Modal>
-  //   );
-  // };
-
-
-  // Update the DayViewModal to remove shift references
   const DayViewModal = () => {
     if (!selectedDay) return null;
 
-    // Only get appointments for this day
-    const dayAppointments = appointments.filter(apt => apt.date === selectedDay.dateString);
-    
+    const dayAppointments = selectedDay.allAppointments || [];
+    const dayShifts = selectedDay.shifts || [];
     const dayName = selectedDay.date.toLocaleDateString('en-US', { weekday: 'long' });
     const dateString = selectedDay.date.toLocaleDateString('en-US', { 
       month: 'long', 
@@ -2508,16 +2081,13 @@ useEffect(() => {
     });
     const isToday = selectedDay.date.toDateString() === new Date().toDateString();
 
-    // Calculate total hours from appointments only
-    const totalHours = dayAppointments.reduce((total, apt) => {
+    // Calculate total hours
+    const appointmentHours = dayAppointments.reduce((total, apt) => {
       const start = new Date(`2000-01-01T${apt.startTime}`);
       const end = new Date(`2000-01-01T${apt.endTime}`);
       return total + (end - start) / (1000 * 60 * 60);
     }, 0);
 
-    // Check if there are shifts on this day
-    const hasShifts = shifts.some(shift => shift.date === selectedDay.dateString);
-    const dayShifts = shifts.filter(shift => shift.date === selectedDay.dateString);
     const shiftHours = dayShifts.reduce((total, shift) => total + shift.duration, 0);
 
     return (
@@ -2545,30 +2115,35 @@ useEffect(() => {
                     <div className="stat-number fw-bold text-primary">{dayAppointments.length}</div>
                     <div className="stat-label small text-muted">Appointments</div>
                   </div>
-                  {hasShifts && (
+                  {dayShifts.length > 0 && (
                     <div className="stat-item text-center">
-                      <div className="stat-number fw-bold text-secondary">{dayShifts.length}</div>
-                      <div className="stat-label small text-muted">Work Shifts</div>
+                      <div className="stat-number fw-bold text-warning">{dayShifts.length}</div>
+                      <div className="stat-label small text-muted">Shifts</div>
                     </div>
                   )}
                   <div className="stat-item text-center">
-                    <div className="stat-number fw-bold text-success">{totalHours.toFixed(1)}h</div>
-                    <div className="stat-label small text-muted">Appointment Hours</div>
+                    <div className="stat-number fw-bold text-success">{appointmentHours.toFixed(1)}h</div>
+                    <div className="stat-label small text-muted">Appt Hours</div>
                   </div>
-                  {hasShifts && (
+                  {dayShifts.length > 0 && (
                     <div className="stat-item text-center">
-                      <div className="stat-number fw-bold text-warning">{shiftHours.toFixed(1)}h</div>
+                      <div className="stat-number fw-bold text-danger">{shiftHours.toFixed(1)}h</div>
                       <div className="stat-label small text-muted">Work Hours</div>
                     </div>
                   )}
                 </div>
                 
-                {/* Shift warning if applicable */}
-                {hasShifts && (
-                  <Alert variant="warning" className="mt-3 p-2 small">
+                {/* Shift info */}
+                {dayShifts.length > 0 && (
+                  <Alert variant="info" className="mt-3 small">
                     <FaClock className="me-2" />
-                    <strong>Work Hours:</strong> You have {dayShifts.length} work shift{dayShifts.length !== 1 ? 's' : ''} scheduled today.
-                    These times are blocked for new appointments.
+                    <strong>Work Shifts Today:</strong> You have {dayShifts.length} work shift{dayShifts.length !== 1 ? 's' : ''} scheduled.
+                    {dayShifts.map((shift, idx) => (
+                      <div key={idx} className="mt-1">
+                        • {shift.startTime} - {shift.endTime} ({shift.duration}h)
+                        {shift.company && ` - ${shift.company}`}
+                      </div>
+                    ))}
                   </Alert>
                 )}
               </div>
@@ -2579,7 +2154,6 @@ useEffect(() => {
                 aria-label={`Add new appointment for ${dateString}`}
                 className="modern-primary-btn flex-shrink-0"
                 size="sm"
-                disabled={hasShifts && dayShifts.some(shift => shift.duration >= 8)} // Disable if full work day
               >
                 <FaRegCalendarPlus className="me-2" />
                 New Appointment
@@ -2589,28 +2163,21 @@ useEffect(() => {
         </Modal.Header>
         
         <Modal.Body className="pt-0">
-          {dayAppointments.length === 0 ? (
+          {dayAppointments.length === 0 && dayShifts.length === 0 ? (
             <div className="empty-state text-center py-5">
               <div className="empty-icon mb-4">
                 <FaCalendarAlt size={48} className="text-muted opacity-25" />
               </div>
-              <h5 className="text-muted mb-2">
-                {hasShifts ? "Work Day - No Appointments" : "No Appointments Scheduled"}
-              </h5>
-              <p className="text-muted mb-4">
-                {hasShifts 
-                  ? "You have work shifts scheduled today. Schedule appointments around your work hours."
-                  : "You have a free day! Time to schedule something productive."}
-              </p>
+              <h5 className="text-muted mb-2">No Events Scheduled</h5>
+              <p className="text-muted mb-4">You have a free day! Time to schedule something.</p>
               <Button
                 variant="primary"
                 onClick={handleNewAppointmentForDay}
                 size="lg"
                 className="modern-primary-btn"
-                disabled={hasShifts && dayShifts.some(shift => shift.duration >= 8)}
               >
                 <FaPlus className="me-2" />
-                Schedule Appointment
+                Schedule Your First Event
               </Button>
             </div>
           ) : (
@@ -2619,8 +2186,78 @@ useEffect(() => {
                 <h6 className="mb-0 fw-bold">Daily Schedule</h6>
                 <Badge bg="light" text="dark" className="px-3 py-2">
                   {dayAppointments.length} appointment{dayAppointments.length !== 1 ? 's' : ''}
+                  {dayShifts.length > 0 && `, ${dayShifts.length} shift${dayShifts.length !== 1 ? 's' : ''}`}
                 </Badge>
               </div>
+              
+              {/* 24-hour timeline visualization */}
+              {dayShifts.length > 0 && (
+                <div className="mb-4">
+                  <h6 className="fw-bold mb-2">24-Hour Timeline</h6>
+                  <div className="timeline-visualization border rounded p-3 bg-light">
+                    <div className="d-flex justify-content-between mb-1 small text-muted">
+                      <span>12 AM</span>
+                      <span>6 AM</span>
+                      <span>12 PM</span>
+                      <span>6 PM</span>
+                      <span>12 AM</span>
+                    </div>
+                    <div className="timeline-bar position-relative" style={{ height: '20px', backgroundColor: '#e9ecef' }}>
+                      {/* Shifts */}
+                      {dayShifts.map((shift, idx) => {
+                        const startPercent = (timeToMinutes(shift.startTime) / (24 * 60)) * 100;
+                        const endPercent = (timeToMinutes(shift.endTime) / (24 * 60)) * 100;
+                        const width = endPercent - startPercent;
+                        
+                        return (
+                          <div 
+                            key={idx}
+                            className="position-absolute h-100 rounded bg-danger"
+                            style={{
+                              left: `${startPercent}%`,
+                              width: `${width}%`,
+                              opacity: 0.7
+                            }}
+                            title={`Shift: ${shift.startTime}-${shift.endTime}`}
+                          />
+                        );
+                      })}
+                      
+                      {/* Appointments */}
+                      {dayAppointments.map((apt, idx) => {
+                        const startPercent = (timeToMinutes(apt.startTime) / (24 * 60)) * 100;
+                        const endPercent = (timeToMinutes(apt.endTime) / (24 * 60)) * 100;
+                        const width = endPercent - startPercent;
+                        
+                        return (
+                          <div 
+                            key={idx}
+                            className="position-absolute h-100 rounded"
+                            style={{
+                              left: `${startPercent}%`,
+                              width: `${width}%`,
+                              backgroundColor: apt.color || '#006D7D',
+                              opacity: 0.9,
+                              top: '0'
+                            }}
+                            title={`Appointment: ${apt.title} ${apt.startTime}-${apt.endTime}`}
+                          />
+                        );
+                      })}
+                    </div>
+                    <div className="mt-2 small text-muted">
+                      <span className="me-3">
+                        <span className="d-inline-block me-1" style={{ width: '10px', height: '10px', backgroundColor: '#dc3545' }}></span>
+                        Work Shifts
+                      </span>
+                      <span>
+                        <span className="d-inline-block me-1" style={{ width: '10px', height: '10px', backgroundColor: '#006D7D' }}></span>
+                        Appointments
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               <div className="appointments-list">
                 {dayAppointments
@@ -2653,7 +2290,6 @@ useEffect(() => {
               variant="primary" 
               onClick={handleNewAppointmentForDay}
               className="flex-fill modern-primary-btn"
-              disabled={hasShifts && dayShifts.some(shift => shift.duration >= 8)}
             >
               <FaPlus className="me-2" />
               Add Another Appointment
@@ -2664,70 +2300,7 @@ useEffect(() => {
     );
   };
 
-  // Add ShiftCard component
-  const ShiftCard = ({ shift }) => {
-    return (
-      <Card className="border-0 shadow-sm mb-3 shift-card border-start border-danger border-3">
-        <Card.Body className="p-3">
-          <div className="d-flex justify-content-between align-items-start">
-            <div className="flex-grow-1">
-              <div className="d-flex align-items-center mb-2">
-                <div 
-                  className="color-indicator me-2 rounded"
-                  style={{
-                    width: '12px',
-                    height: '12px',
-                    backgroundColor: '#FF6B6B'
-                  }}
-                  aria-hidden="true"
-                ></div>
-                <h6 className="mb-0 fw-bold text-danger">
-                  ⚙️ {shift.title || `${shift.company} Shift`}
-                </h6>
-              </div>
-              
-              <div className="shift-primary-info mb-2">
-                <div className="d-flex flex-wrap gap-2 align-items-center">
-                  <Badge bg="danger" className="px-2 py-1 time-badge">
-                    <FaClock className="me-1" style={{ fontSize: '0.7rem' }} />
-                    <span className="fw-medium">{shift.startTime} - {shift.endTime}</span>
-                  </Badge>
-                  
-                  <Badge 
-                    bg="secondary" 
-                    className="px-2 py-1 type-badge"
-                  >
-                    <FaMapMarkerAlt className="me-1" />
-                    <span>{shift.location || shift.company}</span>
-                  </Badge>
-                  
-                  <Badge bg="info" className="px-2 py-1">
-                    <span>{shift.duration} hours</span>
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="location-info d-flex align-items-center mb-2 text-muted small">
-                <FaClock className="me-1" style={{ fontSize: '0.8rem' }} />
-                <span className="location-text">
-                  Work shift scheduled from {shift.startTime} to {shift.endTime}
-                </span>
-              </div>
-            </div>
-            
-            <div className="d-flex flex-column gap-1 flex-shrink-0">
-              <span className="badge bg-danger">
-                <FaClock className="me-1" />
-                Shift
-              </span>
-            </div>
-          </div>
-        </Card.Body>
-      </Card>
-    );
-  };
-
-  // Upcoming Appointments Component - Next 24 hours only
+  // Upcoming Appointments Component
   const UpcomingAppointments = () => (
     <Card className="border-0 shadow-sm ">
       <Card.Header className="bg-primary text-white py-2">
@@ -2786,57 +2359,55 @@ useEffect(() => {
     </Card>
   );
 
-  // In AppointmentScheduler.jsx - Add this to the BookingLinkSection
-  const [isPreloading, setIsPreloading] = useState(false);
-
-  const preloadBookingPage = () => {
-    if (!isPreloading) {
-      setIsPreloading(true);
-      // Preload the booking page component
-      import('../Pages/BookingPage');
-    }
-  };
   // Booking Link Component
-  const BookingLinkSection = () => (
-    
-    <Card className="border-0 shadow-sm ">
-      <Card.Header className="bg-success text-white py-2">
-        <h6 className="mb-0">
-          <FaShare className="me-2" />
-          Your Booking Link
-        </h6>
-      </Card.Header>
-      <Card.Body className="py-2">
-        <p className="text-muted small mb-2">
-          Share this link with others to let them book appointments with you:
-        </p>
-        
-        <div className="d-flex gap-2 mb-2">
-          <BootstrapForm.Control
-            type="text"
-            value={generateBookingLink()}
-            readOnly
-            className="font-monospace small"
-            size="sm"
-            onMouseEnter={preloadBookingPage}
-          />
-          <Button variant="primary" onClick={handleCopyBookingLink} size="sm">
-            <FaCopy className="me-1" />
-            Copy
-          </Button>
-        </div>
-        
+  const BookingLinkSection = () => {
+    const [isPreloading, setIsPreloading] = useState(false);
+
+    const preloadBookingPage = () => {
+      if (!isPreloading) {
+        setIsPreloading(true);
+        import('../Pages/BookingPage');
+      }
+    };
+
+    return (
+      <Card className="border-0 shadow-sm ">
+        <Card.Header className="bg-success text-white py-2">
+          <h6 className="mb-0">
+            <FaShare className="me-2" />
+            Your Booking Link
+          </h6>
+        </Card.Header>
+        <Card.Body className="py-2">
+          <p className="text-muted small mb-2">
+            Share this link with others to let them book appointments with you:
+          </p>
           
-        
-        {copySuccess && (
-          <Alert variant="success" className="py-2 small mb-2">
-            <FaCheckCircle className="me-2" />
-            {copySuccess}
-          </Alert>
-        )}
-      </Card.Body>
-    </Card>
-  );
+          <div className="d-flex gap-2 mb-2">
+            <BootstrapForm.Control
+              type="text"
+              value={generateBookingLink()}
+              readOnly
+              className="font-monospace small"
+              size="sm"
+              onMouseEnter={preloadBookingPage}
+            />
+            <Button variant="primary" onClick={handleCopyBookingLink} size="sm">
+              <FaCopy className="me-1" />
+              Copy
+            </Button>
+          </div>
+          
+          {copySuccess && (
+            <Alert variant="success" className="py-2 small mb-2">
+              <FaCheckCircle className="me-2" />
+              {copySuccess}
+            </Alert>
+          )}
+        </Card.Body>
+      </Card>
+    );
+  };
 
   // Sidebar Content Component
   const SidebarContent = () => (
@@ -2846,54 +2417,11 @@ useEffect(() => {
     </div>
   );
 
-  // Add this function to your AppointmentScheduler component
-  // const handleApproveBooking = async (appointment) => {
-  //   if (!window.confirm(`Approve booking with ${appointment.guestName} on ${appointment.date} at ${appointment.startTime}?`)) {
-  //     return;
-  //   }
-
-  //   try {
-  //     // Update the appointment status to confirmed
-  //     await updateDoc(doc(db, "appointments", appointment.id), {
-  //       status: 'confirmed',
-  //       approvedAt: new Date(),
-  //       approvedBy: user.uid
-  //     });
-
-  //     // Send approval email
-  //     try {
-  //       await sendBookingApprovalEmail({
-  //         guestName: appointment.guestName,
-  //         guestEmail: appointment.guestEmail,
-  //         date: appointment.date,
-  //         startTime: appointment.startTime,
-  //         endTime: appointment.endTime,
-  //         duration: appointment.duration || 60,
-  //         location: appointment.location,
-  //         meetingType: appointment.meetingType,
-  //         videoLink: appointment.videoLink,
-  //         notes: appointment.description
-  //       });
-        
-  //       alert('Booking approved and confirmation email sent!');
-  //     } catch (emailError) {
-  //       console.error('Failed to send approval email:', emailError);
-  //       alert('Booking approved but failed to send confirmation email.');
-  //     }
-
-  //   } catch (error) {
-  //     console.error('Error approving booking:', error);
-  //     alert('Error approving booking. Please try again.');
-  //   }
-  // };
-
-
-
-
   // Add these state variables
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [approvalAction, setApprovalAction] = useState(''); // 'approve' or 'reject'
+
   // Approval handler
   const handleApproveBooking = async (appointment) => {
     setSelectedAppointment(appointment);
@@ -2909,7 +2437,6 @@ useEffect(() => {
   };
 
   // Confirm approval/rejection
-  // Updated approval handler with proper status
   const confirmApprovalAction = async () => {
     if (!selectedAppointment) return;
 
@@ -2917,7 +2444,7 @@ useEffect(() => {
       if (approvalAction === 'approve') {
         // Update the appointment status to "approved"
         await updateDoc(doc(db, "appointments", selectedAppointment.id), {
-          status: 'approved', // Changed from 'confirmed' to 'approved'
+          status: 'approved',
           approved: true,
           approvedAt: new Date(),
           approvedBy: user.uid,
@@ -2971,9 +2498,6 @@ useEffect(() => {
     }
   };
 
-
-
-
   // Add Approval Modal Component
   const ApprovalModal = () => (
     <Modal show={showApprovalModal} onHide={() => setShowApprovalModal(false)}>
@@ -3015,9 +2539,8 @@ useEffect(() => {
     </Modal>
   );
 
-  // Mobile Sidebar - UPDATED: Only show on mobile and tablet
+  // Mobile Sidebar
   const MobileSidebar = () => {
-    // Only render on mobile or tablet
     if (!isMobile && !isTablet) {
       return null;
     }
@@ -3086,24 +2609,25 @@ useEffect(() => {
         </Row>
       </Container>
       
-
       {/* Modals */}
       <AppointmentModal
-      showAppointmentModal={showAppointmentModal}
-      appointmentForm={appointmentForm}
-      handleAppointmentChange={handleAppointmentChange}
-      handleAddGuest={handleAddGuest}
-      handleRemoveGuest={handleRemoveGuest}
-      handleCreateAppointment={(overrideConflict) => handleCreateAppointment(overrideConflict, false)} // Updated
-      isSaving={isSaving}
-      editingAppointment={editingAppointment}
-      setShowAppointmentModal={setShowAppointmentModal}
-      resetAppointmentForm={resetAppointmentForm}
-      handleDeleteAppointment={handleDeleteAppointment}
+        showAppointmentModal={showAppointmentModal}
+        appointmentForm={appointmentForm}
+        handleAppointmentChange={handleAppointmentChange}
+        handleAddGuest={handleAddGuest}
+        handleRemoveGuest={handleRemoveGuest}
+        handleCreateAppointment={handleCreateAppointment}
+        isSaving={isSaving}
+        editingAppointment={editingAppointment}
+        setShowAppointmentModal={setShowAppointmentModal}
+        resetAppointmentForm={resetAppointmentForm}
+        handleDeleteAppointment={handleDeleteAppointment}
+        availableTimeSlots={getAvailableTimeSlots(appointmentForm.date)}
+        dateHasShifts={dateHasShifts(appointmentForm.date)}
       />
       <DayViewModal />
       <ConflictResolutionModal />
-      <ShiftConflictModal /> {/* Add this line */}
+      <ShiftConflictModal />
       <MobileSidebar />
       <ApprovalModal />
     </div>

@@ -1,8 +1,8 @@
 import React from "react";
-import { HashRouter as Router, Routes, Route } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import './App.css';
 import Form from './Pages/Form';
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import SignInSignUp from './Pages/SignInSignUp';
 import Dashboard from "./Pages/Dashboard";
 import NavigationBar from "./Components/NavigationBar";
@@ -23,6 +23,8 @@ import AppointmentScheduler from "./Pages/AppointmentScheduler";
 import ScrollToTopWrapper from "./Components/ScrollToTopWrapper";
 import BookingPage from "./Pages/BookingPage";
 import BookingPageFallback from "./Pages/BookingPageFallback";
+
+
 
 
 
@@ -78,6 +80,8 @@ import BookingPageFallback from "./Pages/BookingPageFallback";
 
 function App() {
   const [username, setUsername] = useState('');
+ 
+
 
   return (
     <Router>
@@ -91,6 +95,7 @@ function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/contact" element={<ContactPage />} />
+
               
               {/* PROTECTED ROUTES - Inside AuthProvider */}
               <Route path="/signin" element={
