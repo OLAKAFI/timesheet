@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Form as BootstrapForm, Card, Button, Alert, Modal, Table } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { FaSignOutAlt, FaClock, FaMoneyBillWave, FaCalendarAlt, FaArrowRight, FaCalculator, FaHospital, FaPrint } from "react-icons/fa";
+import { FaSignOutAlt, FaClock, FaMoneyBillWave, FaCalendarAlt, FaArrowRight, FaArrowLeft, FaCalculator, FaHospital, FaPrint } from "react-icons/fa";
 
 import "../style/form.css";
 
@@ -1902,7 +1902,7 @@ const Form = () => {
     <div className="dashboard-container">
       <Container fluid className="px-3 px-md-4 py-3 h-100">
         {/* Header Section */}
-        <div className="dashboard-header rounded-4 p-3 p-md-4 mb-3 mb-md-4 text-white">
+        {/* <div className="dashboard-header rounded-4 p-3 p-md-4 mb-3 mb-md-4 text-white">
           <Row className="align-items-center">
             <Col xs={12} lg={8} className="text-center text-lg-start mb-3 mb-lg-0">
               <h1 className="h4 h1-lg fw-bold mb-2 mb-lg-3">
@@ -1911,6 +1911,16 @@ const Form = () => {
               <p className="mb-0 fs-6 fs-lg-5 opacity-90">
                 Track your working hours and your earnings
               </p>
+            </Col>
+            <Col xs={12} lg={4} className="text-center text-lg-end">
+                <Button 
+                    variant="light" 
+                    onClick={() => navigate("/dashboard")}
+                    className="fw-bold responsive-btn"
+                    size="sm"
+                >
+                  Back to Dashboard
+                </Button>
             </Col>
             <Col xs={12} lg={4} className="text-center text-lg-end">
               <Button 
@@ -1929,6 +1939,58 @@ const Form = () => {
                 Get More Insight
                 <FaArrowRight className="ms-2" />
               </Button>
+            </Col>
+          </Row>
+        </div> */}
+
+        {/* Header Section */}
+        <div className="dashboard-header rounded-4 p-3 p-md-4 mb-3 mb-md-4 text-white">
+          <Row className="align-items-center">
+            <Col xs={12} lg={8} className="text-center text-lg-start mb-3 mb-lg-0">
+              <h1 className="h4 h1-lg fw-bold mb-2 mb-lg-3">
+                SHIFTROOM EXPLORER
+              </h1>
+              <p className="mb-0 fs-6 fs-lg-5 opacity-90">
+                Track your working hours and your earnings
+              </p>
+            </Col>
+            
+            <Col xs={12} lg={4} className="text-center text-lg-end">
+              <div className="d-flex flex-wrap justify-content-center justify-content-lg-end gap-2">
+                <Button 
+                  variant="light" 
+                  onClick={() => navigate("/dashboard")}
+                  className="fw-bold responsive-btn"
+                  style={{
+                    borderRadius: '12px',
+                    padding: '8px 16px',
+                    color: '#006D7D',
+                    transition: 'all 0.3s ease',
+                    width: 'auto',
+                    minWidth: '140px'
+                  }}
+                >
+                  <FaArrowLeft className="me-2" />
+                   Back to Dashboard
+                </Button>
+                
+                <Button 
+                  variant="light" 
+                  onClick={() => navigate("/dashboard/metrics")}
+                  className="fw-bold responsive-btn"
+                  style={{
+                    borderRadius: '12px',
+                    padding: '8px 16px',
+                    color: '#006D7D',
+                    transition: 'all 0.3s ease',
+                    width: 'auto',
+                    minWidth: '140px'
+                  }}
+                >
+                  Get More Insight
+                  <FaArrowRight className="ms-2" />
+                </Button>
+              </div>
             </Col>
           </Row>
         </div>

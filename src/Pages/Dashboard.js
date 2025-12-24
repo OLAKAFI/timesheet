@@ -13,12 +13,13 @@ const Dashboard = ({ username }) => {
 
   // Feature cards data
   const features = [
+      
       {
-        icon: <FaClock className="feature-icon" />,
-        title: "Smart Time Tracking",
-        description: "Automated time tracking with intelligent categorization and real-time insights",
+        icon: <FaCalendarAlt className="feature-icon" />,
+        title: "Shift Explorer",
+        description: "Seamlessly track your work hours and manage shifts with our intuitive interface",
         gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        url: '/dashboard/appointments'
+        url: '/timesheet'
       },
       {
         icon: <FaChartLine className="feature-icon" />,
@@ -27,13 +28,16 @@ const Dashboard = ({ username }) => {
         gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
         url: '/dashboard/metrics'
       },
+
       {
-        icon: <FaCalendarAlt className="feature-icon" />,
-        title: "Shift Planning",
-        description: "Intelligent scheduling that adapts to your preferences and maximizes efficiency",
+        icon: <FaClock className="feature-icon" />,
+        title: "Appointment Scheduling",
+        description: "Schedule and manage client appointments with ease using our integrated calendar",
         gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-        url: '/timesheet'
+        url: '/dashboard/appointments'
       },
+
+
       {
         icon: <FaMobile className="feature-icon" />,
         title: "Mobile First",
