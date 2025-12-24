@@ -15,6 +15,7 @@ import {
   query, 
   where, 
   getDocs,
+  updateDoc,
   deleteDoc 
 } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
@@ -85,21 +86,39 @@ const Form = () => {
 
   // ADDED FUNCTIONS
   // Add this function to sync shifts (simplified version)
+  // Add this function to your Form.jsx for better shift synchronization
   const syncShiftsToFirestore = async () => {
     if (!user) return;
 
     try {
       const shiftsCollection = collection(db, "shifts");
       
-      // Delete existing shifts for this user to prevent duplicates
-      const q = query(shiftsCollection, where("userId", "==", user.uid));
-      const querySnapshot = await getDocs(q);
-      const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
-      await Promise.all(deletePromises);
+      // First, get all existing shifts for this user and month
+      const existingShiftsQuery = query(
+        shiftsCollection,
+        where("userId", "==", user.uid),
+        where("year", "==", selectedYear),
+        where("month", "==", selectedMonth + 1)
+      );
       
-      // Add new shifts only for days with valid times
-      const shiftsToAdd = days
-        .filter(day => day.timeStart && day.timeEnd && day.timeDifference && parseFloat(day.timeDifference) > 0)
+      const existingSnapshot = await getDocs(existingShiftsQuery);
+      const existingShiftsMap = new Map();
+      
+      existingSnapshot.forEach(doc => {
+        const shift = doc.data();
+        const key = `${shift.date}-${shift.startTime}-${shift.endTime}`;
+        existingShiftsMap.set(key, doc.id);
+      });
+      
+      // Prepare new shifts
+      const newShifts = days
+        .filter(day => {
+          // Only include days with valid time entries
+          return day.timeStart && 
+                day.timeEnd && 
+                day.timeDifference && 
+                parseFloat(day.timeDifference) > 0;
+        })
         .map(day => {
           const dateKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day.day).padStart(2, '0')}`;
           
@@ -119,14 +138,50 @@ const Form = () => {
             isShift: true
           };
         });
-
-      // Add all shifts in batch
-      const addPromises = shiftsToAdd.map(shift => addDoc(shiftsCollection, shift));
       
-      if (addPromises.length > 0) {
-        await Promise.all(addPromises);
-        console.log(`✅ Synced ${shiftsToAdd.length} shifts to Firestore`);
-      }
+      // Determine which shifts need to be added, updated, or deleted
+      const shiftsToAdd = [];
+      const shiftsToUpdate = [];
+      const shiftKeysToDelete = new Set(existingShiftsMap.keys());
+      
+      newShifts.forEach(shift => {
+        const key = `${shift.date}-${shift.startTime}-${shift.endTime}`;
+        
+        if (existingShiftsMap.has(key)) {
+          // Shift exists, mark for update
+          shiftsToUpdate.push({
+            id: existingShiftsMap.get(key),
+            data: shift
+          });
+          shiftKeysToDelete.delete(key);
+        } else {
+          // New shift, mark for addition
+          shiftsToAdd.push(shift);
+        }
+      });
+      
+      // Delete shifts that are no longer needed
+      const deletePromises = Array.from(shiftKeysToDelete).map(async (key) => {
+        const docId = existingShiftsMap.get(key);
+        if (docId) {
+          await deleteDoc(doc(db, "shifts", docId));
+        }
+      });
+      
+      // Update existing shifts
+      const updatePromises = shiftsToUpdate.map(async ({ id, data }) => {
+        await updateDoc(doc(db, "shifts", id), data);
+      });
+      
+      // Add new shifts
+      const addPromises = shiftsToAdd.map(shift => {
+        return addDoc(shiftsCollection, shift);
+      });
+      
+      // Execute all operations
+      await Promise.all([...deletePromises, ...updatePromises, ...addPromises]);
+      
+      console.log(`✅ Synced shifts: ${shiftsToAdd.length} added, ${shiftsToUpdate.length} updated, ${shiftKeysToDelete.size} deleted`);
       
     } catch (error) {
       console.error("❌ Error syncing shifts:", error);
@@ -682,6 +737,47 @@ const Form = () => {
   // };
 
   // Update the saveToFirestore function to include shift sync
+  // const saveToFirestore = async () => {
+  //   if (!user || isInitializing) {
+  //     console.warn("No authenticated user. Cannot save data.");
+  //     return;
+  //   }
+
+  //   const key = `user-data-${selectedYear}-${selectedMonth + 1}`;
+  //   const userDocRef = doc(db, "userInputs", user.uid);
+    
+  //   const updatedData = {
+  //     [key]: { 
+  //       days, 
+  //       carryForward 
+  //     },
+  //     company: company || "My Company",
+  //     contractType: contractType || "Contract",
+  //     contractHours: contractHours || 0,
+  //     hourlyRate: hourlyRate || 12.60,
+  //     lastSync: new Date().toISOString()
+  //   };
+
+  //   if (company === "NHS") {
+  //     updatedData.nhsBand = nhsBand;
+  //     updatedData.nhsStep = nhsStep;
+  //     updatedData.nhsEmploymentType = nhsEmploymentType;
+  //     updatedData.nhsWeeklyHours = nhsWeeklyHours;
+  //     updatedData.nhsEnhancements = nhsEnhancements;
+  //   }
+
+  //   try {
+  //     await setDoc(userDocRef, updatedData, { merge: true });
+  //     console.log("✅ Data successfully updated in Firestore");
+      
+  //     // Sync shifts after saving data
+  //     await syncShiftsToFirestore();
+  //   } catch (error) {
+  //     console.error("❌ Error saving data to Firestore:", error);
+  //   }
+  // };
+
+  // Update the saveToFirestore function
   const saveToFirestore = async () => {
     if (!user || isInitializing) {
       console.warn("No authenticated user. Cannot save data.");
@@ -715,8 +811,12 @@ const Form = () => {
       await setDoc(userDocRef, updatedData, { merge: true });
       console.log("✅ Data successfully updated in Firestore");
       
-      // Sync shifts after saving data
-      await syncShiftsToFirestore();
+      // Sync shifts after saving data (debounced)
+      const debouncedSync = setTimeout(() => {
+        syncShiftsToFirestore();
+      }, 1000);
+      
+      return () => clearTimeout(debouncedSync);
     } catch (error) {
       console.error("❌ Error saving data to Firestore:", error);
     }
