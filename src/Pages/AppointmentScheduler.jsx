@@ -2580,12 +2580,20 @@ const AppointmentScheduler = () => {
             </Col>
             <Col xs={12} lg={4} className="text-center text-lg-end">
               <Button 
-                variant="light" 
-                onClick={() => navigate("/dashboard")}
-                className="fw-bold responsive-btn"
-                size="sm"
-              >
-                Back to Dashboard
+                                variant="light" 
+                                onClick={() => navigate("/dashboard")}
+                                className="fw-bold responsive-btn"
+                                style={{
+                                  borderRadius: '12px',
+                                  padding: '8px 16px',
+                                  color: '#006D7D',
+                                  transition: 'all 0.3s ease',
+                                  width: 'auto',
+                                  minWidth: '140px'
+                                }}
+                              >
+                                <FaArrowLeft className="me-2" />
+                                 Back to Dashboard
               </Button>
             </Col>
           </Row>
