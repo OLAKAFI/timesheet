@@ -719,17 +719,6 @@ const SignInSignUp = ({ setUsername }) => {
           </div>
         </Col>
       </Row>
-      {/* Add Admin Access Link */}
-      <div className="text-center mt-4">
-        <Button 
-          variant="link" 
-          onClick={() => navigate("/admin")}
-          className="text-decoration-none small"
-        >
-          🔐 Admin Access
-        </Button>
-      </div>
-      
     </Container>
   );
 };
