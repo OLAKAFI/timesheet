@@ -23,6 +23,13 @@ import AppointmentScheduler from "./Pages/AppointmentScheduler";
 import ScrollToTopWrapper from "./Components/ScrollToTopWrapper";
 import BookingPage from "./Pages/BookingPage";
 import BookingPageFallback from "./Pages/BookingPageFallback";
+import AdminDashboard from "./Pages/AdminDashboard";
+import RotaPage from "./Pages/RotaPage";
+import AdminRoute from "./Components/AdminRoute";
+import UserRoute from "./Components/UserRoute";
+import AdminSetupPage from "./Pages/AdminSetupPage";
+import AdminManualSetup from "./Pages/AdminManualSetup";
+
 
 
 
@@ -96,12 +103,33 @@ function App() {
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/contact" element={<ContactPage />} />
 
+              {/* <Route path="/admin-setup" element={<AdminSetupPage />} /> */}
+              {/* {process.env.NODE_ENV === 'development' && (
+                <Route path="/setup-admin" element={<AdminSetupPage />} />
+              )} */}
+
+              <Route path="/setup-admin" element={<AdminManualSetup />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
               
               {/* PROTECTED ROUTES - Inside AuthProvider */}
               <Route path="/signin" element={
                 <AuthProvider requireAuth={false}>
                   <SignInSignUp setUsername={setUsername} />
                 </AuthProvider>
+              } />
+
+              {/* <Route path="/admin/dashboard" element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              } /> */}
+              
+
+              <Route path="/admin/rota" element={
+                <AdminRoute>
+                  <RotaPage />
+                </AdminRoute>
               } />
               
               {/* All other routes that need auth */}

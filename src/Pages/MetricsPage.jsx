@@ -672,7 +672,7 @@ const MetricsPage = () => {
                   }}
                 >
                   <FaArrowLeft className="me-1 me-md-2" />
-                  <span>Back to Shift Explorer</span>
+                  <span>Shift Explorer</span>
                 </Button>
               </div>
             </Col>

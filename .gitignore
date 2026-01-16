@@ -21,3 +21,13 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+
+kokorowole.json
+rulebackup.js
+generateInviteCode.js
+AdminManualSetup.js
+generateInviteCode-fix.js
+firebaseAdminSetup.js
+createFirstAdmin.js
+setupAdmin.js
