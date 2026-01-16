@@ -2593,7 +2593,7 @@ const AppointmentScheduler = () => {
                                 }}
                               >
                                 <FaArrowLeft className="me-2" />
-                                 Back to Dashboard
+                                 Dashboard
               </Button>
             </Col>
           </Row>

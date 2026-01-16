@@ -1971,7 +1971,7 @@ const Form = () => {
                   }}
                 >
                   <FaArrowLeft className="me-2" />
-                   Back to Dashboard
+                   Dashboard
                 </Button>
                 
                 <Button 
@@ -1987,7 +1987,7 @@ const Form = () => {
                     minWidth: '140px'
                   }}
                 >
-                  Get More Insight
+                  Get Insight
                   <FaArrowRight className="ms-2" />
                 </Button>
               </div>
