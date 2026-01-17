@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, Nav, Button, Table, Badge } from "react-bootstrap";
 import { useLocation, useNavigate } from "react-router-dom";
+import { FaCalendarAlt, FaMoneyBillWave, FaClock, FaArrowLeft, FaArrowRight, FaBuilding, FaFileContract, FaMoneyCheckAlt, FaEdit } from 'react-icons/fa';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   PieChart, Pie, Cell, ResponsiveContainer 
@@ -42,17 +43,19 @@ const AdminDashboard = () => {
 
   return (
     <Container fluid className="admin-dashboard p-0">
+
       {/* Admin Header */}
-      <div className="admin-header bg-dark text-white p-3">
-        <Row className="align-items-center">
-          <Col>
-            <h4 className="mb-0">
-              <i className="bi bi-shield-check me-2"></i>
-              Admin Dashboard
-            </h4>
-            <small className="text-muted">Welcome, {user.displayName}</small>
+      <div className="dashboard-header text-white p-3 p-md-4 mb-3 mb-md-4">
+        <Row className="align-items-center my-3">
+          <Col xs={12} lg={8} className="text-center text-lg-start mb-3 mb-lg-0">
+            <h1 className="mb-0 h4 h1-lg fw-bold">
+              <i className="bi bi-shield-check"></i>
+              ADMIN DASHBOARD
+            </h1>
+            <p className="text-white fs-6 fs-lg-5 opacity-90">Welcome, {user.displayName}</p>
           </Col>
-          <Col xs="auto">
+          <Col xs={12} lg={4} className="text-center text-lg-end">
+            
             <Badge bg="warning" text="dark" className="me-3">
               ADMIN
             </Badge>
