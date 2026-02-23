@@ -244,7 +244,7 @@ const StaffSchedule = () => {
   // MAIN CONTENT
   return (
     <Container className="mt-4 mb-5 px-3 px-md-5">
-    <h2 className="text-center display-5 fw-bold my-4" style={{ color: "#592693" }}>
+    <h2 className="text-center display-5 fw-bold my-4" style={{ color: "#336bcaff" }}>
       STAFF DETAILS
     </h2>
     
@@ -317,7 +317,7 @@ const StaffSchedule = () => {
       
       <div className="d-flex flex-wrap gap-2 justify-content-center">
        
-        <Button className="mt-3 mb-4" style={{ backgroundColor: "#4D0FD8" }} onClick={addRow}>
+        <Button className="mt-3 mb-4" style={{ backgroundColor: "#336bcaff" }} onClick={addRow}>
           <BsPlus /> Add Staff
         </Button>
 
@@ -330,7 +330,7 @@ const StaffSchedule = () => {
     
     {/* Rota Table */}
     <section className="mt-5">
-      <h2 className="text-center display-5 fw-bold my-4" style={{ color: "#592693" }}>STAFF ROTA</h2>
+      <h2 className="text-center display-5 fw-bold my-4" style={{ color: "#336bcaff" }}>STAFF ROTA</h2>
       <div className="table-responsive">
         <Table striped bordered hover>
           <thead>
@@ -399,7 +399,7 @@ const StaffSchedule = () => {
         </Table>
       </div>
 
-      <Button onClick={assignShifts} className="mt-3" style={{ backgroundColor: "#4D0FD8" }}>
+      <Button onClick={assignShifts} className="mt-3" style={{ backgroundColor: "#336bcaff" }}>
         Assign / Reassign Shifts
       </Button>
 
