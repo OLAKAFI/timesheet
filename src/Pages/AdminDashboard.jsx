@@ -6,6 +6,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   PieChart, Pie, Cell, ResponsiveContainer 
 } from "recharts";
+import RotaPage from "./RotaPage";
+import StaffSchedule from "./StaffSchedule";
 
 const AdminDashboard = () => {
   const location = useLocation();
@@ -306,7 +308,8 @@ const AdminDashboard = () => {
             </Card.Header>
             <Card.Body>
               <p>Rota management content goes here...</p>
-              {/* Add your rota management interface */}
+              <StaffSchedule />
+              <RotaPage />
             </Card.Body>
           </Card>
         )}

@@ -29,6 +29,8 @@ import AdminRoute from "./Components/AdminRoute";
 import UserRoute from "./Components/UserRoute";
 import AdminSetupPage from "./Pages/AdminSetupPage";
 import AdminManualSetup from "./Pages/AdminManualSetup";
+import TermsOfServicePage from "./Pages/TermsofServicePage";
+import SupportPage from "./Pages/SupportPage";
 
 
 
@@ -100,8 +102,13 @@ function App() {
               
               {/* OTHER PUBLIC ROUTES */}
               <Route path="/" element={<LandingPage />} />
+              <Route path="/rota" element={<StaffSchedule />} />
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/terms" element={<TermsOfServicePage />} />
+              <Route path="/privacy" element={<PrivacyPolicyPage />} />
+              <Route path="/support" element={<SupportPage />} />
+              
 
               {/* <Route path="/admin-setup" element={<AdminSetupPage />} /> */}
               {/* {process.env.NODE_ENV === 'development' && (
