@@ -1,8 +1,13 @@
 // TermsOfServicePage.jsx
 import { React, useEffect } from 'react';
-import { Container, Row, Col, Card } from 'react-bootstrap';
+import { Container, Button, Row, Col, Card, Nav } from 'react-bootstrap';
+import { Link, useNavigate} from "react-router-dom";
+import NavigationBar from '../Components/NavigationBar';
+import '../style/landing.css';
+import tlogo from '../style/shiftroomlogo.png';
 
 const TermsOfServicePage = () => {
+  const navigate = useNavigate();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -14,8 +19,41 @@ const TermsOfServicePage = () => {
       fontFamily: "'Segoe UI', 'Roboto', sans-serif",
       minHeight: '100vh'
     }}>
-      <Container>
+      <nav className="landing-nav">
+        <Container>
+          <Row className="align-items-center py-3">
+            <Col xs={6} md={4}>
+              <div className="logo">
+                <img
+                  src={tlogo}
+                  alt="ShiftRoom Logo"
+                  style={{ maxHeight: "70px" }}
+                />
+                <span>ShiftRoom</span>
+              </div>
+            </Col>
+            <Col md={4} className="d-none d-md-block">
+              <div className="nav-links">
+                <a href="features">Features</a>
+                <Link to="/contact">Contact Us</Link>
+                
+              </div>
+            </Col>
+            <Col xs={6} md={4} className="text-end">
+                <Button 
+                  variant="outline-primary" 
+                  onClick={() => navigate("/signin")}
+                  className="nav-button"
+                >
+                  Sign In | Sign Up
+                </Button>
+              
+            </Col>
+          </Row>
+        </Container>
+      </nav>
 
+      <Container>
         {/* Hero Section */}
         <Row className="py-5 text-center">
           <Col>
@@ -116,7 +154,7 @@ const TermsOfServicePage = () => {
                   10. Contact Information
                 </h4>
                 <p className="text-muted">
-                  Email: support@shiftroom.app <br/>
+                  Email: support@shiftroom.co.uk <br/>
                   Company: ShiftRoom Ltd
                 </p>
 

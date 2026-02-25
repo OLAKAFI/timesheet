@@ -86,7 +86,7 @@ const LandingPage = ({ username }) => {
             </Col>
             <Col md={4} className="d-none d-md-block">
               <div className="nav-links">
-                <a href="#features">Features</a>
+                <a href="/features">Features</a>
                 <Link to="/contact">Contact Us</Link>
                 
               </div>

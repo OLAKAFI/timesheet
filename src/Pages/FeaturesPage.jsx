@@ -1,8 +1,10 @@
 // FeaturesPage.jsx
 import {React, useEffect} from 'react';
-import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { FaChartLine, FaClock, FaCalculator, FaMobileAlt, FaSyncAlt, FaComments } from 'react-icons/fa';
+import { Link, useNavigate} from "react-router-dom";
+import '../style/landing.css';
+import tlogo from '../style/shiftroomlogo.png';
 
 const FeaturesPage = () => {
   const navigate = useNavigate();
@@ -18,6 +20,39 @@ const FeaturesPage = () => {
       fontFamily: "'Segoe UI', 'Roboto', sans-serif",
       minHeight: '100vh'
     }}>
+      <nav className="landing-nav">
+              <Container>
+                <Row className="align-items-center py-3">
+                  <Col xs={6} md={4}>
+                    <div className="logo">
+                      <img
+                        src={tlogo}
+                        alt="ShiftRoom Logo"
+                        style={{ maxHeight: "70px" }}
+                      />
+                      <span>ShiftRoom</span>
+                    </div>
+                  </Col>
+                  <Col md={4} className="d-none d-md-block">
+                    <div className="nav-links">
+                      <a href="features">Features</a>
+                      <Link to="/contact">Contact Us</Link>
+                      
+                    </div>
+                  </Col>
+                  <Col xs={6} md={4} className="text-end">
+                      <Button 
+                        variant="outline-primary" 
+                        onClick={() => navigate("/signin")}
+                        className="nav-button"
+                      >
+                        Sign In | Sign Up
+                      </Button>
+                    
+                  </Col>
+                </Row>
+              </Container>
+      </nav>
       <Container>
         {/* Hero Section */}
         <Row className="align-items-center py-5">
@@ -38,7 +73,7 @@ const FeaturesPage = () => {
                   borderRadius: '12px',
                   padding: '12px 24px'
                 }}
-                onClick={() => navigate("/timesheet")}
+                onClick={() => navigate("/signin")}
               >
                 Get Started
               </Button>

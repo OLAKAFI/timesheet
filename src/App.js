@@ -29,8 +29,9 @@ import AdminRoute from "./Components/AdminRoute";
 import UserRoute from "./Components/UserRoute";
 import AdminSetupPage from "./Pages/AdminSetupPage";
 import AdminManualSetup from "./Pages/AdminManualSetup";
-import TermsOfServicePage from "./Pages/TermsofServicePage";
+import TermsOfServicePage from "./Pages/TermsOfServicePage";
 import SupportPage from "./Pages/SupportPage";
+import PrivacyPolicyPage from "./Pages/PrivacyPolicyPage";
 
 
 
