@@ -1,12 +1,16 @@
 // PrivacyPolicyPage.jsx
 import { React, useEffect } from 'react';
-import { Container, Row, Col, Card } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import '../style/landing.css';
+import tlogo from '../style/shiftroomlogo.png';
+import { Link, useNavigate} from "react-router-dom";
 
 const PrivacyPolicyPage = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+  const navigate = useNavigate();
 
   return (
     <div className="py-5" style={{ 
@@ -14,6 +18,40 @@ const PrivacyPolicyPage = () => {
       fontFamily: "'Segoe UI', 'Roboto', sans-serif",
       minHeight: '100vh'
     }}>
+
+      <nav className="landing-nav">
+        <Container>
+          <Row className="align-items-center py-3">
+            <Col xs={6} md={4}>
+              <div className="logo">
+                <img
+                  src={tlogo}
+                  alt="ShiftRoom Logo"
+                  style={{ maxHeight: "70px" }}
+                />
+                <span>ShiftRoom</span>
+              </div>
+            </Col>
+            <Col md={4} className="d-none d-md-block">
+              <div className="nav-links">
+                <a href="features">Features</a>
+                <Link to="/contact">Contact Us</Link>
+                
+              </div>
+            </Col>
+            <Col xs={6} md={4} className="text-end">
+                <Button 
+                  variant="outline-primary" 
+                  onClick={() => navigate("/signin")}
+                  className="nav-button"
+                >
+                  Sign In | Sign Up
+                </Button>
+              
+            </Col>
+          </Row>
+        </Container>
+      </nav>
       <Container>
 
         {/* Hero Section */}
@@ -88,7 +126,7 @@ const PrivacyPolicyPage = () => {
                   <li>Withdraw consent where applicable</li>
                 </ul>
                 <p className="text-muted">
-                  To request deletion, contact: support@shiftroom.app
+                  To request deletion, contact: support@shiftroom.co.uk
                 </p>
 
                 <h4 className="fw-bold mt-4 mb-3" style={{ color: '#006D7D' }}>
@@ -120,7 +158,7 @@ const PrivacyPolicyPage = () => {
                   9. Contact Us
                 </h4>
                 <p className="text-muted">
-                  Email: support@shiftroom.app <br/>
+                  Email: support@shiftroom.co.uk <br/>
                   Company: ShiftRoom Ltd
                 </p>
 

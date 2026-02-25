@@ -254,7 +254,6 @@ const MetricsPage = () => {
 
   
   // Calculate gross pay based on contract type and company
-  // Calculate gross pay based on contract type and company
   const calculateGrossPay = (monthData, contractDetails, totalHours, previousMonthOvertime) => {
     const { company, contractType, contractHours, hourlyRate } = contractDetails;
     
@@ -318,7 +317,6 @@ const MetricsPage = () => {
   };
 
 
-  // Fetch user data from Firestore for the selected date
   // Fetch user data from Firestore for the selected date
   const fetchUserData = async () => {
     try {
@@ -396,7 +394,6 @@ const MetricsPage = () => {
 
 
   
-  // Process the data for dashboard visualization
   // Process the data for dashboard visualization
   const processDashboardData = async (monthData, contractDetails, year, month, previousMonthData = null) => {
     console.log("🔄 Processing dashboard data...");
