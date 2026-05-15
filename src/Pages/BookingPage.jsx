@@ -52,17 +52,18 @@ import { useParams, useNavigate } from "react-router-dom";
 
 const BookingPage = () => {
   const { userId } = useParams();
+  
   const navigate = useNavigate();
+  const [selectedDate, setSelectedDate] = useState(() => {
+    // Set minimum date to today
+    return formatLocalDate(new Date());
+  });
   
   // State management
   const [userProfile, setUserProfile] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [shifts, setShifts] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(() => {
-    // Set minimum date to today
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  });
+  
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -127,6 +128,107 @@ const BookingPage = () => {
   ];
 
   // Helper functions
+
+
+  // Convert "YYYY-MM-DD" to a UTC day number (days since 1970-01-01 UTC)
+  // const getUTCDayNumber = (dateString) => {
+  //   if (!dateString) return null;
+  //   const [year, month, day] = dateString.split('-').map(Number);
+  //   // UTC milliseconds since epoch, divided by milliseconds per day
+  //   return Date.UTC(year, month - 1, day) / (24 * 60 * 60 * 1000);
+  // };
+
+  // Convert "YYYY-MM-DD" to UTC midnight timestamp (ms)
+  // const getUTCMidnightTimestamp = (dateString) => {
+  //   if (!dateString) return null;
+  //   const [year, month, day] = dateString.split('-').map(Number);
+  //   return Date.UTC(year, month - 1, day, 0, 0, 0, 0);
+  // };
+
+  // const dateStringToUTCTimestamp = (dateString) => {
+  //   if (!dateString) return null;
+  //   const [year, month, day] = dateString.split('-').map(Number);
+  //   return Date.UTC(year, month - 1, day, 0, 0, 0, 0);
+  // };
+
+  // Convert "YYYY-MM-DD" to local midnight timestamp (ms)
+  // const getLocalMidnightTimestamp = (dateString) => {
+  //   if (!dateString) return null;
+  //   const [year, month, day] = dateString.split('-').map(Number);
+  //   return new Date(year, month - 1, day, 0, 0, 0, 0).getTime();
+  // };
+
+  // Add this helper near your other date utilities
+  // const toLocalDateString = (dateString) => {
+  //   // dateString is "YYYY-MM-DD" from the input
+  //   const [year, month, day] = dateString.split('-').map(Number);
+  //   const localDate = new Date(year, month - 1, day, 12, 0, 0); // noon to avoid DST issues
+  //   return formatLocalDate(localDate);
+  // };
+
+  const formatShortDateLabel = (dateString) => {
+    if (!dateString) return "";
+    const [year, month, day] = dateString.split("-");
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const weekdays = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    // Use UTC to compute weekday (no local timezone shift)
+    const utcDate = new Date(Date.UTC(year, month - 1, day));
+    const weekday = weekdays[utcDate.getUTCDay()];
+    return `${weekday}, ${months[month - 1]} ${parseInt(day)}`;
+
+  };
+
+  
+
+  const formatDateLabel = (dateString) => {
+    if (!dateString) return "";
+    const [year, month, day] = dateString.split("-");
+    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const weekdays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const utcDate = new Date(Date.UTC(year, month - 1, day));
+    const weekday = weekdays[utcDate.getUTCDay()];
+    return `${weekday}, ${months[month - 1]} ${parseInt(day)}, ${year}`;
+  };
+
+
+  // Convert Firestore Timestamp or Date to local YYYY-MM-DD (for today's min date only)
+  const formatLocalDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // Convert Firestore value to a plain YYYY-MM-DD string without timezone shifting
+  const getDateStringFromFirestore = (value) => {
+    if (!value) return "";
+    // If it's already a string in YYYY-MM-DD format, return it as is
+    if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return value;
+    }
+    // If it's a Firestore Timestamp
+    if (value?.toDate) {
+      const date = value.toDate();
+      return formatLocalDate(date);
+    }
+    // If it's a JS Date object
+    if (value instanceof Date) {
+      return formatLocalDate(value);
+    }
+    // Fallback: try to parse as ISO and extract parts (but avoid new Date)
+    // This should rarely happen; return empty string
+    console.warn("Unexpected date format:", value);
+    return "";
+  };
+
+  // Convert YYYY-MM-DD to UTC day number (days since epoch)
+  const getUTCDayNumber = (dateString) => {
+    if (!dateString) return null;
+    const [year, month, day] = dateString.split("-").map(Number);
+    return Date.UTC(year, month - 1, day) / (24 * 60 * 60 * 1000);
+  };
+
+
   const timeToMinutes = (timeStr) => {
     if (!timeStr) return 0;
     const [hours, minutes] = timeStr.split(':').map(Number);
@@ -196,8 +298,39 @@ const BookingPage = () => {
           return;
         }
 
+
+        const normalizeFirestoreDate = (value) => {
+          if (!value) return "";
+
+          // Firestore Timestamp
+          if (value?.toDate) {
+            return formatLocalDate(value.toDate());
+          }
+
+          // JS Date
+          if (value instanceof Date) {
+            return formatLocalDate(value);
+          }
+
+          // Already yyyy-mm-dd
+          if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            return value;
+          }
+
+          // ISO string
+          const parsed = new Date(value);
+
+          if (!isNaN(parsed.getTime())) {
+            return formatLocalDate(parsed);
+          }
+
+          return String(value).trim();
+        };
+
+
+
         // Load appointments
-        const today = new Date().toISOString().split('T')[0];
+        const today = formatLocalDate(new Date());
         const appointmentsQuery = query(
           collection(db, "appointments"),
           where("userId", "==", userId),
@@ -206,14 +339,20 @@ const BookingPage = () => {
           orderBy("startTime", "asc")
         );
 
-        const appointmentsUnsubscribe = onSnapshot(appointmentsQuery, 
-          (querySnapshot) => {
-            const appointmentsData = [];
-            querySnapshot.forEach((doc) => {
-              appointmentsData.push({ id: doc.id, ...doc.data() });
+        const appointmentsUnsubscribe = onSnapshot(appointmentsQuery, (querySnapshot) => {
+          const appointmentsData = [];
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const dateString = getDateStringFromFirestore(data.date);
+            const dayNumber = getUTCDayNumber(dateString);
+            appointmentsData.push({
+              id: doc.id,
+              ...data,
+              date: dateString,          // keep the plain string
+              dayNumber: dayNumber
             });
-            console.log("✅ Appointments loaded:", appointmentsData.length);
-            setAppointments(appointmentsData);
+          });
+          setAppointments(appointmentsData);
           },
           (error) => {
             console.error("❌ Error loading appointments:", error);
@@ -221,27 +360,37 @@ const BookingPage = () => {
           }
         );
 
+        
+        // const normalizedDate = normalizeFirestoreDate(data.date);
+        // const dateTimestamp = dateStringToUTCTimestamp(normalizedDate);
         // Load shifts
         const shiftsQuery = query(
           collection(db, "shifts"),
           where("userId", "==", userId)
         );
 
-        const shiftsUnsubscribe = onSnapshot(shiftsQuery, 
-          (querySnapshot) => {
-            const shiftsData = [];
-            querySnapshot.forEach((doc) => {
-              shiftsData.push({ id: doc.id, ...doc.data() });
+        const shiftsUnsubscribe = onSnapshot(shiftsQuery, (querySnapshot) => {
+          const shiftsData = [];
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const dateString = getDateStringFromFirestore(data.date);
+            const dayNumber = getUTCDayNumber(dateString);
+            shiftsData.push({
+              id: doc.id,
+              ...data,
+              date: dateString,
+              dayNumber: dayNumber
             });
-            console.log("✅ Shifts loaded:", shiftsData.length);
-            setShifts(shiftsData);
-            setIsLoading(false);
+          });
+          setShifts(shiftsData);
+          setIsLoading(false);
           },
           (error) => {
             console.error("❌ Error loading shifts:", error);
             setShifts([]);
             setIsLoading(false);
           }
+          
         );
 
         return () => {
@@ -268,9 +417,10 @@ const BookingPage = () => {
       
       try {
         // Get appointments and shifts for the selected date
-        const dayAppointments = appointments.filter(apt => apt.date === selectedDate);
-        const dayShifts = shifts.filter(shift => shift.date === selectedDate);
-        
+        // const selectedTimestamp = dateStringToUTCTimestamp(selectedDate);
+        const selectedDayNumber = getUTCDayNumber(selectedDate);
+        const dayAppointments = appointments.filter(apt => apt.dayNumber === selectedDayNumber);
+        const dayShifts = shifts.filter(shift => shift.dayNumber === selectedDayNumber);
         // Combine all busy times
         const busyTimes = [];
         
@@ -302,7 +452,7 @@ const BookingPage = () => {
         const availableSlots = [];
         
         // If today, start from current time + 30 minutes
-        const today = new Date().toISOString().split('T')[0];
+        const today = formatLocalDate(new Date());
         const isToday = selectedDate === today;
         const currentTime = isToday ? new Date().getHours() * 60 + new Date().getMinutes() + 30 : dayStart;
         const startTime = Math.max(dayStart, currentTime);
@@ -357,14 +507,21 @@ const BookingPage = () => {
     if (endMinutes - startMinutes !== bookingForm.duration) return false;
     
     // Check if today and time is in the past
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatLocalDate(new Date());
     if (selectedDate === today) {
       const currentMinutes = new Date().getHours() * 60 + new Date().getMinutes();
       if (startMinutes < currentMinutes) return false;
     }
     
     // Check conflicts with appointments
-    const dayAppointments = appointments.filter(apt => apt.date === selectedDate);
+    // const selectedTimestamp = dateStringToUTCTimestamp(selectedDate);
+    const selectedDayNumber = getUTCDayNumber(selectedDate);
+    const dayAppointments = appointments.filter(apt => apt.dayNumber === selectedDayNumber);
+
+    
+
+    
+
     for (const apt of dayAppointments) {
       const aptStart = timeToMinutes(apt.startTime);
       const aptEnd = timeToMinutes(apt.endTime);
@@ -374,7 +531,9 @@ const BookingPage = () => {
     }
     
     // Check conflicts with shifts
-    const dayShifts = shifts.filter(shift => shift.date === selectedDate);
+    
+    const dayShifts = shifts.filter(shift => shift.dayNumber === selectedDayNumber);
+    
     for (const shift of dayShifts) {
       const shiftStart = timeToMinutes(shift.startTime);
       const shiftEnd = timeToMinutes(shift.endTime);
@@ -507,7 +666,7 @@ const BookingPage = () => {
     const endHour = block.endHour;
     
     // Check if selected date is today
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatLocalDate(new Date());
     const isToday = selectedDate === today;
     const currentTimeMinutes = isToday ? new Date().getHours() * 60 + new Date().getMinutes() : 0;
     
@@ -876,25 +1035,29 @@ const BookingPage = () => {
                   type="date"
                   value={selectedDate}
                   onChange={(e) => {
-                    setSelectedDate(e.target.value);
+                    const newDate = e.target.value;   // raw YYYY-MM-DD from picker
                     setSelectedSlot(null);
-                    setBookingForm(prev => ({
-                      ...prev,
-                      manualStartTime: "",
-                      manualEndTime: ""
-                    }));
+                    setAvailableTimeSlots([]);
+                    setBookingForm(prev => ({ ...prev, manualStartTime: "", manualEndTime: "" }));
+                    setSelectedDate(newDate);
                   }}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="mb-2"
+                  min={formatLocalDate(new Date())}
                 />
-                <small className="text-muted">
-                  {new Date(selectedDate).toLocaleDateString('en-US', { 
+                {/* <small className="text-muted">
+                  {parseLocalDate(selectedDate).toLocaleDateString('en-US', { 
                     weekday: 'long', 
                     month: 'long', 
                     day: 'numeric',
                     year: 'numeric'
                   })}
+                </small> */}
+
+                <small className="text-muted">
+                  {formatDateLabel(selectedDate)}
                 </small>
+
+                
+                
               </div>
 
               {/* Duration Selection */}
@@ -1032,7 +1195,12 @@ const BookingPage = () => {
                                 {blockSlots.map((slot, index) => (
                                   <Button
                                     key={index}
-                                    variant={selectedSlot === slot ? "primary" : "outline-primary"}
+                                    variant={
+                                      selectedSlot?.start === slot.start &&
+                                      selectedSlot?.end === slot.end
+                                        ? "primary"
+                                        : "outline-primary"
+                                    }
                                     className="slot-btn m-1"
                                     onClick={() => handleBlockSlotSelect(slot)}
                                     size="sm"
@@ -1176,11 +1344,12 @@ const BookingPage = () => {
                     <div className="small">
                       <div className="d-flex justify-content-between mb-1">
                         <span className="text-muted">Date:</span>
-                        <strong>{new Date(selectedDate).toLocaleDateString('en-US', { 
+                        {/* <strong>{parseLocalDate(selectedDate).toLocaleDateString('en-US', { 
                           weekday: 'short', 
                           month: 'short', 
                           day: 'numeric' 
-                        })}</strong>
+                        })}</strong> */}
+                        <strong>{formatShortDateLabel(selectedDate)}</strong>
                       </div>
                       <div className="d-flex justify-content-between mb-1">
                         <span className="text-muted">Time:</span>

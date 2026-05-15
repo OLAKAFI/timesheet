@@ -1046,6 +1046,14 @@ const AppointmentScheduler = () => {
     return desktopValue;
   };
 
+  const formatLocalDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+  
+
   // FIXED: Calendar generation
   const generateCalendarDays = useMemo(() => {
     const year = selectedDate.getFullYear();
@@ -1061,7 +1069,7 @@ const AppointmentScheduler = () => {
       // Add days from current month only
       for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
         const date = new Date(year, month, i);
-        const dateString = date.toISOString().split('T')[0];
+        const dateString = formatLocalDate(date);
         const dayAppointments = getAppointmentsForDate(dateString);
         
         // Sort appointments by start time and take only the first two earliest
@@ -1094,7 +1102,7 @@ const AppointmentScheduler = () => {
     for (let i = firstDayOfWeek - 1; i >= 0; i--) {
       const day = lastDayOfPrevMonth - i;
       const date = new Date(year, month - 1, day);
-      const dateString = date.toISOString().split('T')[0];
+      const dateString = formatLocalDate(date);
       days.push({
         date,
         dateString,
@@ -1110,7 +1118,7 @@ const AppointmentScheduler = () => {
     // Add days from current month
     for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
       const date = new Date(year, month, i);
-      const dateString = date.toISOString().split('T')[0];
+      const dateString = formatLocalDate(date);
       const dayAppointments = getAppointmentsForDate(dateString);
       
       // Sort appointments by start time and take only the first two earliest
@@ -1140,7 +1148,7 @@ const AppointmentScheduler = () => {
     
     for (let i = 0; i < daysNeeded; i++) {
       const date = new Date(year, nextMonth, nextMonthDay);
-      const dateString = date.toISOString().split('T')[0];
+      const dateString = formatLocalDate(date);
       days.push({
         date,
         dateString,
